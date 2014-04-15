@@ -1,0 +1,28 @@
+{
+	com.badlogic.gdx.graphics.g2d.BitmapFont: { 
+		font_20: { file: fonts/small_font_20.fnt },
+		font_25: { file: fonts/small_font_25.fnt },
+		font_30: { file: fonts/small_font_30.fnt }
+	},
+	com.badlogic.gdx.graphics.Color: {
+		ui_title_color: {a: 1, b: 1, g: 1, r: 1},
+		ui_font_color:  {a: 1, b: 0, g: 0, r: 0},
+		ui_white_font_color:  {a: 1, b: 1, g: 1, r: 1},
+		ui_down_font_color:  {a: 1, b: 0.25, g: 0, r: 0}
+	},
+	com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
+		ui_label: {font: font_20, fontColor: ui_font_color},
+		ui_white_label: {font: font_20, fontColor: ui_white_font_color},
+		title_label: {font: font_30, fontColor: ui_title_color} 
+	},
+	com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
+		ui_text_button: { 
+			down: blue_bg, up: grey_bg, font: font_20,
+			downFontColor: ui_down_font_color, fontColor: ui_font_color
+		},
+		ui_checked_text_button: { 
+			down: blue_bg, up: grey_bg, checked: blue_bg, font: font_20,
+			downFontColor: ui_down_font_color, fontColor: ui_font_color
+		}
+	}
+}

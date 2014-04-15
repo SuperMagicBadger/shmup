@@ -1,0 +1,21 @@
+<level>
+    <name>Round</name>
+    <size>1500:1500</size>
+    <block>
+        <sprite>center_piece</sprite>
+        <pos>-200:200</pos>
+        <rot>45</rot>
+    </block>
+    <block>
+        <sprite>center_piece</sprite>
+        <pos>-200:-200</pos>
+    </block>
+    <block>
+        <sprite>center_piece</sprite>
+        <pos>200:200</pos>
+    </block>
+    <block>
+        <sprite>center_piece</sprite>
+        <pos>200:-200</pos>
+    </block>
+</level>

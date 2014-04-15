@@ -1,0 +1,29 @@
+
+
+//			Vector2 push = SHMUP.vector_pool.obtain();
+//			for (int j = 0; j < activeUnits.size(); j++) {
+//				if (i == j)
+//					continue;
+//				EnemyController pec = activeUnits.get(j);
+//				// apply specials
+//				if (pec instanceof ShieldBroController
+//						&& !(ec instanceof ShieldBroController)) {
+//					((ShieldBroController) pec).applyShield(ec);
+//				} else if (pec instanceof SplodeBroController) {
+//					((SplodeBroController) pec).applyExplosion(ec, game.score);
+//				}
+//				// push apart
+//				Vector2 relation = SHMUP.vector_pool.obtain();
+//				relation.set(ec.getControlled().getOriginPosX(), ec
+//						.getControlled().getOriginPosY());
+//				relation.sub(pec.getControlled().getOriginPosX(), pec
+//						.getControlled().getOriginPosY());
+//				float len = relation.len2();
+//				if (len < 25 * 25) {
+//					relation.scl(50 * 50 / len);
+//					push.add(relation);
+//				}
+//				SHMUP.vector_pool.free(relation);
+//			}
+//			ec.getControlled().move(push.scl(delta));
+//			SHMUP.vector_pool.free(push);
