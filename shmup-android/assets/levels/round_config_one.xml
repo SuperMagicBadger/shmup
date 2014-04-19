@@ -9,13 +9,16 @@
     <block>
         <sprite>center_piece</sprite>
         <pos>-200:-200</pos>
+        <rot>-45</rot>
     </block>
     <block>
         <sprite>center_piece</sprite>
         <pos>200:200</pos>
+        <rot>-45</rot>
     </block>
     <block>
         <sprite>center_piece</sprite>
         <pos>200:-200</pos>
+        <rot>45</rot>
     </block>
 </level>

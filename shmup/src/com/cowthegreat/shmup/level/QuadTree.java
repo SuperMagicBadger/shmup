@@ -1,4 +1,4 @@
-package com.cowthegreat.shmup;
+package com.cowthegreat.shmup.level;
 
 import java.util.ArrayList;
 
@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
+import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.controllers.UnitController;
 
 public class QuadTree {

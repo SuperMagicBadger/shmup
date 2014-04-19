@@ -1,5 +1,7 @@
 package com.cowthegreat.shmup.controllers;
 
+import java.text.Format;
+
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
@@ -10,12 +12,12 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
 
-;
 
 public abstract class PlayerController implements UnitController {
 	public interface DashEnder {
@@ -30,13 +32,13 @@ public abstract class PlayerController implements UnitController {
 
 	public static final float dashSpeed = 2000;
 	public static final float dashDuration = 0.10f;
-	public static final float dashCooldown = 0.75f;
+	public static final float dashCooldown = 0.5f;
 	public static final float dashDistance = dashSpeed * dashDuration;
 
-	public static final float HITBOX_REST_SCALE_X = 1;
-	public static final float HITBOX_REST_SCALE_Y = 1;
-	public static final float HITBOX_ACTIVE_SCALE_X = 2f;
-	public static final float HITBOX_ACTIVE_SCALE_Y = 2f;
+	public static final float HITBOX_REST_SCALE_X = 0.5f;
+	public static final float HITBOX_REST_SCALE_Y = 0.5f;
+	public static final float HITBOX_ACTIVE_SCALE_X = 2.75f;
+	public static final float HITBOX_ACTIVE_SCALE_Y = 2.75f;
 
 	// vars
 	protected Camera camera;
@@ -82,13 +84,13 @@ public abstract class PlayerController implements UnitController {
 		
 		float[] newPoints = new float[4 * 2];
 		
-		newPoints[6] = 0;
+		newPoints[6] = 10;
 		newPoints[7] = player.getRegionHeight() - 5;
-		newPoints[4] = 0;
+		newPoints[4] = 10;
 		newPoints[5] = 5;
-		newPoints[2] = player.getRegionWidth();
+		newPoints[2] = player.getRegionWidth() - 10;
 		newPoints[3] = 8;
-		newPoints[0] = player.getRegionWidth();
+		newPoints[0] = player.getRegionWidth() - 10;
 		newPoints[1] = player.getRegionHeight() - 8;		
 		
 		hitbox = new Polygon(newPoints);
@@ -271,6 +273,9 @@ public abstract class PlayerController implements UnitController {
 	}
 
 	public void drawHitbox(ShapeRenderer shapes) {
+		if(isDead()){
+			return;
+		}
 		Color c = shapes.getColor();
 		if (hitbox == null) {
 			Rectangle r = player.getBoundingRectangle();
@@ -316,9 +321,15 @@ public abstract class PlayerController implements UnitController {
 	public Polygon getHitBox() {
 		return hitbox;
 	}
-
+	
+	@Override
+	public boolean isSeperable() {
+		return false;
+	}
+	
 	// RESET TILT CONTROL
 
 	public abstract void reset();
+	public abstract void setMesage(Label l, Format f);
 
 }

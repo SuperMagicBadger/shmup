@@ -15,7 +15,7 @@ import com.cowthegreat.shmup.SHMUP;
 public class Main {
 	public static void main(String[] args) throws IOException {
 
-		// SHMUP.USE_EXTERNAL_RESOURCES = true;
+		 SHMUP.USE_EXTERNAL_RESOURCES = true;
 		if (SHMUP.USE_EXTERNAL_RESOURCES) {
 			Settings settings = new Settings();
 			settings.minHeight = settings.minWidth = 2;

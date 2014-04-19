@@ -160,21 +160,21 @@ bro
   orig: 21, 21
   offset: 0, 0
   index: -1
-dash_bro_dash_marker
+bro_marker
   rotate: false
   xy: 131, 126
+  size: 10, 20
+  orig: 10, 20
+  offset: 0, 0
+  index: -1
+dash_bro_dash_marker
+  rotate: false
+  xy: 143, 126
   size: 10, 20
   orig: 10, 20
   offset: 0, 0
   index: -1
 marker
-  rotate: false
-  xy: 131, 126
-  size: 10, 20
-  orig: 10, 20
-  offset: 0, 0
-  index: -1
-dash_bro_marker
   rotate: false
   xy: 143, 126
   size: 10, 20
@@ -301,16 +301,23 @@ splode_bro_splode_radius
   orig: 20, 12
   offset: 0, 0
   index: -1
-shield_bro_marker
+dash_bro_marker
   rotate: false
   xy: 275, 58
   size: 10, 20
   orig: 10, 20
   offset: 0, 0
   index: -1
-splode_bro_marker
+shield_bro_marker
   rotate: false
   xy: 287, 58
+  size: 10, 20
+  orig: 10, 20
+  offset: 0, 0
+  index: -1
+splode_bro_marker
+  rotate: false
+  xy: 299, 58
   size: 10, 20
   orig: 10, 20
   offset: 0, 0

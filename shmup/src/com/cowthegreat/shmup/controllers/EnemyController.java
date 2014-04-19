@@ -3,8 +3,8 @@ package com.cowthegreat.shmup.controllers;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.cowthegreat.shmup.RoundMap;
 import com.cowthegreat.shmup.graphics.GameSprite;
+import com.cowthegreat.shmup.level.RoundMap;
 
 public abstract class EnemyController implements UnitController{
 	

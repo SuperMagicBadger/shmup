@@ -42,11 +42,11 @@ public class SettingsScreen implements Screen {
 	Label sensitivityXLabel, sensitivityValueXLabel;
 	Slider sensitivityXSlider;
 
-//	Label sensitivityYLabel, sensitivityValueYLabel;
-//	Slider sensitivityYSlider;
+	Label sensitivityYLabel, sensitivityValueYLabel;
+	Slider sensitivityYSlider;
 
-	Label smoothLabel, smoothValueLabel;
-	Slider smoothSlider;
+//	Label smoothLabel, smoothValueLabel;
+//	Slider smoothSlider;
 
 	TextButton controlStyle, showHitbox, resetTilt, clearHighScores;
 	TextButton backButton;
@@ -76,41 +76,41 @@ public class SettingsScreen implements Screen {
 		sensitivityXLabel = new Label("Tilt Sensitivity:   - ", lStyle);
 		sensitivityValueXLabel = new Label(" + (5)", lStyle);
 
-		sensitivityXSlider = new Slider(1, 5, 1, false, sstyle);
+		sensitivityXSlider = new Slider(1, 50, 1, false, sstyle);
 		sensitivityXSlider.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				shmupgame.settings.sensitivityX = 6 - sensitivityXSlider.getValue();
+				shmupgame.settings.sensitivityX = sensitivityXSlider.getValue();
 				sensitivityValueXLabel.setText(" +  ("
 						+ ((int) shmupgame.settings.sensitivityX) + ")");
 			}
 		});
 
-//		sensitivityYLabel = new Label("Tilt Y Sensitivity:   - ", lStyle);
-//		sensitivityValueYLabel = new Label(" + (0)", lStyle);
-//
-//		sensitivityYSlider = new Slider(1, 5, 1, false, sstyle);
-//		sensitivityYSlider.addListener(new ChangeListener() {
-//			@Override
-//			public void changed(ChangeEvent event, Actor actor) {
-//				shmupgame.settings.sensitivityY = sensitivityYSlider.getValue();
-//				sensitivityValueYLabel.setText(" +  ("
-//						+ ((int) shmupgame.settings.sensitivityY) + ")");
-//			}
-//		});
+		sensitivityYLabel = new Label("Tilt Y Sensitivity:   - ", lStyle);
+		sensitivityValueYLabel = new Label(" + (0)", lStyle);
 
-		smoothLabel = new Label("Input Smoothing:   + ", lStyle);
-		smoothValueLabel = new Label(" - 5", lStyle);
-
-		smoothSlider = new Slider(0.1f, 0.9f, 0.05f, false, sstyle);
-		smoothSlider.addListener(new ChangeListener() {
+		sensitivityYSlider = new Slider(1, 50, 1, false, sstyle);
+		sensitivityYSlider.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
-				shmupgame.settings.smoothing = smoothSlider.getValue();
-				smoothValueLabel.setText(" -  ("
-						+ (format.format(shmupgame.settings.smoothing)) + ")");
+				shmupgame.settings.sensitivityY = sensitivityYSlider.getValue();
+				sensitivityValueYLabel.setText(" +  ("
+						+ ((int) shmupgame.settings.sensitivityY) + ")");
 			}
 		});
+
+//		smoothLabel = new Label("Input Smoothing:   + ", lStyle);
+//		smoothValueLabel = new Label(" - 5", lStyle);
+//
+//		smoothSlider = new Slider(0.1f, 0.9f, 0.05f, false, sstyle);
+//		smoothSlider.addListener(new ChangeListener() {
+//			@Override
+//			public void changed(ChangeEvent event, Actor actor) {
+//				shmupgame.settings.smoothing = smoothSlider.getValue();
+//				smoothValueLabel.setText(" -  ("
+//						+ (format.format(shmupgame.settings.smoothing)) + ")");
+//			}
+//		});
 
 		controlStyle = new TextButton("Dashing Towards Touch", tbstyle);
 		controlStyle.addListener(new ClickListener() {
@@ -160,12 +160,12 @@ public class SettingsScreen implements Screen {
 		optionsTable.add(sensitivityXLabel).padBottom(20);
 		optionsTable.add(sensitivityXSlider).padBottom(20);
 		optionsTable.add(sensitivityValueXLabel).padBottom(20).row();
-//		optionsTable.add(sensitivityYLabel).padBottom(20);
-//		optionsTable.add(sensitivityYSlider).padBottom(20);
-//		optionsTable.add(sensitivityValueYLabel).padBottom(20).row();
-		optionsTable.add(smoothLabel).padBottom(20);
-		optionsTable.add(smoothSlider).padBottom(20);
-		optionsTable.add(smoothValueLabel).padBottom(20).row();
+		optionsTable.add(sensitivityYLabel).padBottom(20);
+		optionsTable.add(sensitivityYSlider).padBottom(20);
+		optionsTable.add(sensitivityValueYLabel).padBottom(20).row();
+//		optionsTable.add(smoothLabel).padBottom(20);
+//		optionsTable.add(smoothSlider).padBottom(20);
+//		optionsTable.add(smoothValueLabel).padBottom(20).row();
 		optionsTable.add(resetTilt).colspan(3).fill().fillX().padBottom(10)
 				.row();
 		optionsTable.add(showHitbox).colspan(3).fill().fillX();
@@ -211,17 +211,17 @@ public class SettingsScreen implements Screen {
 		} else {
 			showHitbox.setText(hhb);
 		}
-		sensitivityXSlider.setValue(6 - shmupgame.settings.sensitivityX);
+		sensitivityXSlider.setValue(shmupgame.settings.sensitivityX);
 		sensitivityValueXLabel.setText(" +  ("
 				+ ((int) shmupgame.settings.sensitivityX) + ")");
 
-//		sensitivityYSlider.setValue(shmupgame.settings.sensitivityY);
-//		sensitivityValueYLabel.setText(" -  ("
-//				+ ((int) shmupgame.settings.sensitivityY) + ")");
+		sensitivityYSlider.setValue(shmupgame.settings.sensitivityY);
+		sensitivityValueYLabel.setText(" +  ("
+				+ ((int) shmupgame.settings.sensitivityY) + ")");
 
-		smoothSlider.setValue(shmupgame.settings.smoothing);
-		smoothValueLabel.setText(" -  ("
-				+ (format.format(shmupgame.settings.smoothing)) + ")");
+//		smoothSlider.setValue(shmupgame.settings.smoothing);
+//		smoothValueLabel.setText(" -  ("
+//				+ (format.format(shmupgame.settings.smoothing)) + ")");
 
 		Gdx.input.setInputProcessor(uiStage);
 	}

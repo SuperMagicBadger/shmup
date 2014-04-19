@@ -17,13 +17,15 @@ public interface UnitController {
 
 	public Polygon getHitBox();
 
-	void damage(int dam);
+	public void damage(int dam);
 
-	boolean isDead();
+	public boolean isDead();
 
-	void onDeath();
+	public void onDeath();
 
-	void update(float delta);
+	public void update(float delta);
 
-	void draw(SpriteBatch batch);
+	public void draw(SpriteBatch batch);
+	
+	public boolean isSeperable();
 }

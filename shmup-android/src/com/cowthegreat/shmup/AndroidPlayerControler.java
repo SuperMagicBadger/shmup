@@ -1,9 +1,12 @@
 package com.cowthegreat.shmup;
 
+import java.text.Format;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.cowthegreat.shmup.controllers.PlayerController;
 
 public class AndroidPlayerControler extends PlayerController {
@@ -46,7 +49,7 @@ public class AndroidPlayerControler extends PlayerController {
 		if (zeroTilt == null)
 			return 0;
 		float raw = Gdx.input.getAccelerometerY() - zeroTilt.x;
-		runningX = runningX * game.settings.smoothing + (1 - game.settings.smoothing) * raw;
+		runningX = runningX * 0.75f + (1 - 0.75f) * raw;
 		return runningX;
 	}
 
@@ -54,7 +57,7 @@ public class AndroidPlayerControler extends PlayerController {
 		if (zeroTilt == null)
 			return 0;
 		float raw = -(Gdx.input.getAccelerometerX() - zeroTilt.y);
-		runningY = runningY * game.settings.smoothing + (1 - game.settings.smoothing) * raw;
+		runningY = runningY * 0.75f + (1 - 0.75f) * raw;
 		if(runningY == 0){
 		}
 		return runningY;
@@ -67,5 +70,11 @@ public class AndroidPlayerControler extends PlayerController {
 				Gdx.input.getAccelerometerX());
 		zeroTilt.x = Math.max(Math.min(10 - game.settings.sensitivityX, zeroTilt.x), -(10 - game.settings.sensitivityX));
 		zeroTilt.y = Math.max(Math.min(10 - game.settings.sensitivityX, zeroTilt.y), -(10 - game.settings.sensitivityX));
+	}
+
+	@Override
+	public void setMesage(Label l, Format f) {
+		// TODO Auto-generated method stub
+		
 	}
 }

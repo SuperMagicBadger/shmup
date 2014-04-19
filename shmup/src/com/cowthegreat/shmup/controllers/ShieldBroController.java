@@ -45,7 +45,7 @@ public class ShieldBroController extends EnemyController {
 	ArrayList<EnemyController> shieldList;
 
 	public static final float SHIELD_RADIUS = 200;
-	public static final float MOVE_SPEED = PlayerController.playerSpeed;
+	public static final float MOVE_SPEED = 100;
 	public static final float DODGE_SPEED = MOVE_SPEED * 4.5f;
 	public static final float STANDOFF_DISTANCE = 150;
 	public static final float STANDOFF_TOLERANCE = 50;
@@ -184,5 +184,10 @@ public class ShieldBroController extends EnemyController {
 	@Override
 	public TextureRegion radarMarker() {
 		return marker;
+	}
+	
+	@Override
+	public boolean isSeperable() {
+		return false;
 	}
 }

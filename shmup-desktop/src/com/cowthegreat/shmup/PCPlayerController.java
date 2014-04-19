@@ -1,8 +1,11 @@
 package com.cowthegreat.shmup;
 
+import java.text.Format;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.cowthegreat.shmup.controllers.PlayerController;
 
 public class PCPlayerController extends PlayerController {
@@ -41,6 +44,12 @@ public class PCPlayerController extends PlayerController {
 	
 	@Override
 	public void reset(){
+		
+	}
+
+	@Override
+	public void setMesage(Label l, Format f) {
+		// TODO Auto-generated method stub
 		
 	}
 

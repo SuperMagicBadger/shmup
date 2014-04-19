@@ -17,9 +17,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.cowthegreat.shmup.GameMap;
 import com.cowthegreat.shmup.SHMUP;
-import com.cowthegreat.shmup.RoundMap;
 import com.cowthegreat.shmup.controllers.PlayerController;
 import com.cowthegreat.shmup.graphics.GameOverActor;
 import com.cowthegreat.shmup.graphics.GameOverActor.Listener;
@@ -27,6 +25,9 @@ import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.ParallaxBackground;
 import com.cowthegreat.shmup.graphics.ParallaxCamera;
 import com.cowthegreat.shmup.graphics.Radar;
+import com.cowthegreat.shmup.level.ContinousRoundMap;
+import com.cowthegreat.shmup.level.GameMap;
+import com.cowthegreat.shmup.level.RoundMap;
 
 public class GameScreen implements Screen {
 	SHMUP game;
@@ -37,21 +38,23 @@ public class GameScreen implements Screen {
 	private SpriteBatch batch;
 	private ShapeRenderer shapes;
 	private ImmediateModeRenderer immediate;
-	DecimalFormat format;
+	private DecimalFormat format;
 
-	GameMap gm;
+	private Vector2 cameraVelocity;
 	
-	GameOverActor goa;
+	private GameMap gm;
+	
+	private GameOverActor goa;
 
-	PlayerController playerContrller;
+	private PlayerController playerContrller;
 
 	boolean isPaused = false;
 	boolean isGameOver = true;
 
-	Stage stage;
-	Label fpsLabel, scoreLabel;
+	private Stage stage;
+	private Label fpsLabel, scoreLabel, acceleromiterLabel;
 
-	Radar radar;
+	private Radar radar;
 
 	public GameScreen(SHMUP shmupGame) {
 		game = shmupGame;
@@ -66,8 +69,9 @@ public class GameScreen implements Screen {
 		camera.bg.addLayer(game.skn.getRegion("biggrid"), 0.5f);
 		camera.bg.addLayer(game.skn.getRegion("littlegrid"), 1);
 
-		gm = new RoundMap(shmupGame);
-//		gm = new SquareGameMap(shmupGame, 1500, 1500);
+		cameraVelocity = SHMUP.vector_pool.obtain();
+		
+		gm = new ContinousRoundMap(shmupGame);
 
 		format = new DecimalFormat("##.##");
 		format.setMinimumIntegerDigits(2);
@@ -83,6 +87,9 @@ public class GameScreen implements Screen {
 		fpsLabel.setPosition(0, stage.getHeight() - fpsLabel.getHeight());
 		scoreLabel.setPosition(stage.getWidth() - scoreLabel.getWidth(),
 				stage.getHeight() - scoreLabel.getHeight());
+		
+		acceleromiterLabel = new Label("", game.skn, "font_20", Color.WHITE);
+		acceleromiterLabel.setPosition(0, 50);
 
 		// SET UP GAME OVER WIDGET
 		goa = new GameOverActor(game);
@@ -127,6 +134,7 @@ public class GameScreen implements Screen {
 
 		stage.addActor(fpsLabel);
 		stage.addActor(scoreLabel);
+//		stage.addActor(acceleromiterLabel);
 		stage.addActor(goa);
 
 		radar = new Radar(game);
@@ -182,6 +190,7 @@ public class GameScreen implements Screen {
 
 		// UI RENDERING
 		fpsLabel.setText("" + Gdx.graphics.getFramesPerSecond());
+		playerContrller.setMesage(acceleromiterLabel, format);
 		scoreLabel.setText("Wave " + gm.getLevel() + " Score: "
 				+ game.score.currentKills);
 		scoreLabel.pack();
@@ -205,11 +214,11 @@ public class GameScreen implements Screen {
 
 		// update camera and background
 		GameSprite player = playerContrller.getControlled();
-		Vector2 vec = player.velocity.cpy().nor();
-		vec.scl(25).add(player.getOriginPosX(), player.getOriginPosY());
-		vec.x = ((vec.x - camera.position.x) * 5 * delta);
-		vec.y = ((vec.y - camera.position.y) * 5 * delta);
-		camera.slide(vec.x, vec.y, gm.getBounds());
+		cameraVelocity.set(player.velocity).nor();
+		cameraVelocity.scl(25).add(player.getOriginPosX(), player.getOriginPosY());
+		cameraVelocity.x = ((cameraVelocity.x - camera.position.x) * 5 * delta);
+		cameraVelocity.y = ((cameraVelocity.y - camera.position.y) * 5 * delta);
+		camera.slide(cameraVelocity.x, cameraVelocity.y, gm.getBounds());
 	}
 
 	public void gameOver() {

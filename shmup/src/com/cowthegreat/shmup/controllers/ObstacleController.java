@@ -1,6 +1,5 @@
 package com.cowthegreat.shmup.controllers;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector.MinimumTranslationVector;
@@ -45,8 +44,6 @@ public class ObstacleController implements UnitController{
 		
 		Vector2 v = SHMUP.vector_pool.obtain();
 		if (PolyTools.intersect(hitbox, ucHB, v)){
-			System.out.println("butts");
-			System.out.println(v);
 			uc.getControlled().move(v.x, v.y);
 		}
 		SHMUP.vector_pool.free(v);
@@ -67,36 +64,7 @@ public class ObstacleController implements UnitController{
 
 	@Override
 	public void drawHitbox(ShapeRenderer shapes) {
-		Color c = shapes.getColor();
-		shapes.setColor(Color.RED);
-		shapes.rect(
-				hitbox.getBoundingRectangle().x, hitbox.getBoundingRectangle().getY(),
-				hitbox.getBoundingRectangle().width, hitbox.getBoundingRectangle().height);
-		shapes.polygon(hitbox.getTransformedVertices());
-		shapes.setColor(Color.BLUE);
-		
-		float[] p = hitbox.getTransformedVertices();
-		
-		for(int i = 0; i < p.length; i+=2){
-			float x1 = p[i];
-			float y1 = p[i + 1];
-			float x2 = p[(i + 2) % p.length];
-			float y2 = p[(i + 3) % p.length];
-			
-			Vector2 nor = SHMUP.vector_pool.obtain();
-			nor.set(y1 - y2, -(x1 - x2)).nor().scl(10);
-			
-			Vector2 midpt = SHMUP.vector_pool.obtain();
-			midpt.set((x1 + x2) / 2, (y1 + y2) / 2);
-			nor.add(midpt);
-			
-			shapes.line(midpt, nor);
-			
-			SHMUP.vector_pool.free(nor);
-			SHMUP.vector_pool.free(midpt);
-		}
-		
-		shapes.setColor(c);
+		PolyTools.drawPolygon(shapes, hitbox);
 	}
 
 	@Override
@@ -135,4 +103,8 @@ public class ObstacleController implements UnitController{
 		controlled.draw(batch);
 	}
 
+	@Override
+	public boolean isSeperable() {
+		return false;
+	}
 }

@@ -1,6 +1,5 @@
 package com.cowthegreat.shmup.controllers;
 
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
@@ -22,21 +21,25 @@ public class DashBroController extends EnemyController {
 
 	private class DashEnder implements ParticleEffectListener {
 		PooledEffect efct;
-		DashEnder(PooledEffect efct){
+
+		DashEnder(PooledEffect efct) {
 			this.efct = efct;
 		}
+
 		@Override
 		public void effectFinished() {
 			setState(State.DASH);
 			efct.free();
 		}
 	}
-	
-	private class ExplosionEnder implements ParticleEffectListener{
+
+	private class ExplosionEnder implements ParticleEffectListener {
 		PooledEffect efct;
+
 		public ExplosionEnder(PooledEffect efct) {
 			this.efct = efct;
 		}
+
 		@Override
 		public void effectFinished() {
 			setDispose(true);
@@ -44,16 +47,17 @@ public class DashBroController extends EnemyController {
 		}
 	}
 
-
-	private static final float TRACK_SPEED = 150;
+	private static final float TRACK_SPEED = 100;
 	public static final float DASH_DISTANCE = 300;
 	private static final float DASH_SPEED = 800;
 	private static final float DASH_DURATION = DASH_DISTANCE / DASH_SPEED;
 	private static final float RECOVER_SPEED = 50;
 	private static final float RECOVER_DISTANCE = 100;
-	private static final float RECOVER_DURATION = RECOVER_DISTANCE / RECOVER_SPEED;
-	public static final float DASH_THRESHOLD = DASH_SPEED * DASH_DURATION * 0.50f;
-	
+	private static final float RECOVER_DURATION = RECOVER_DISTANCE
+			/ RECOVER_SPEED;
+	public static final float DASH_THRESHOLD = DASH_DISTANCE
+			* 0.5f;
+
 	private GameSprite unit;
 	private GameSprite center;
 	private GameSprite shield;
@@ -61,45 +65,42 @@ public class DashBroController extends EnemyController {
 	public State currentState;
 	float dashTimer;
 	boolean dead;
-	
+
 	Vector2 position;
 	Vector2 destination;
-	
+
 	Vector2 velocity;
 	Vector2 targetVelocity;
-	
+
 	TextureRegion marker, dashMarker;
-	
+
 	public DashBroController() {
 		currentState = State.READY;
 
 		dead = false;
-		
+
 		position = new Vector2();
 		destination = new Vector2();
 
 		velocity = new Vector2();
 		targetVelocity = new Vector2();
-		
-		hitbox = new Polygon(new float[]{
-			-15, -15,
-			15, -15,
-			15, 15,
-			-15, 15
-		});
+
+		hitbox = new Polygon(new float[] { -15, -15, 15, -15, 15, 15, -15, 15 });
 	}
 
 	@Override
-	public void initialize(Skin s){
+	public void initialize(Skin s) {
 		unit = new GameSprite(s.getRegion("dash_bro"));
-		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions("dash_bro_center"), Animation.LOOP_PINGPONG));
+		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
+				"dash_bro_center"), Animation.LOOP_PINGPONG));
 		shield = new GameSprite(s.getRegion("dash_bro_shield"));
-		hitbox.setPosition(unit.getX() + unit.getOriginX(), unit.getY() + unit.getOriginY());
-		
+		hitbox.setPosition(unit.getX() + unit.getOriginX(),
+				unit.getY() + unit.getOriginY());
+
 		marker = s.getRegion("dash_bro_marker");
 		dashMarker = s.getRegion("marker");
 	}
-	
+
 	public void setControlled(GameSprite object) {
 		unit = object;
 	}
@@ -111,12 +112,12 @@ public class DashBroController extends EnemyController {
 
 	@Override
 	public void damage(int dam) {
-		if(!isInvulnerable()){
+		if (!isInvulnerable()) {
 			dead = true;
 			onDeath();
 		}
 	}
-	
+
 	public void setState(State state) {
 		switch (state) {
 		case READY:
@@ -138,7 +139,7 @@ public class DashBroController extends EnemyController {
 		case RECOVER:
 			dashTimer = 0;
 			setInvulnerable(false);
-			destination.set(-unit.getX(), -unit.getY());
+			destination.set(SHMUP.rng.nextFloat(), SHMUP.rng.nextFloat());
 			destination.nor().scl(RECOVER_DISTANCE)
 					.add(unit.getX(), unit.getY());
 			break;
@@ -180,7 +181,8 @@ public class DashBroController extends EnemyController {
 		center.update(delta);
 		shield.setVisible(isInvulnerable());
 		shield.setPosition(unit.getX(), unit.getY());
-		hitbox.setPosition(unit.getX() + unit.getOriginX(), unit.getY() + unit.getOriginY());
+		hitbox.setPosition(unit.getX() + unit.getOriginX(),
+				unit.getY() + unit.getOriginY());
 	}
 
 	private void updateRecover(float delta) {
@@ -189,8 +191,9 @@ public class DashBroController extends EnemyController {
 		// update position
 		unit.velocity.set(velocity);
 		dashTimer += delta;
-		
-		if (destination.dst(unit.getX(), unit.getY()) < 5 || dashTimer > RECOVER_DURATION) {
+
+		if (destination.dst(unit.getX(), unit.getY()) < 5
+				|| dashTimer > RECOVER_DURATION) {
 			velocity.set(0, 0);
 			setState(State.READY);
 		}
@@ -201,7 +204,8 @@ public class DashBroController extends EnemyController {
 		destination.set(tracked.getX(), tracked.getY());
 
 		// find tracking velocity
-		velocity.set(destination.x - unit.getOriginPosX(), destination.y - unit.getOriginPosY());
+		velocity.set(destination.x - unit.getOriginPosX(),
+				destination.y - unit.getOriginPosY());
 		velocity.nor().scl(TRACK_SPEED);
 
 		// update position
@@ -214,19 +218,20 @@ public class DashBroController extends EnemyController {
 			setState(State.WAIT);
 			return;
 		}
+
 	}
 
 	private void updateDash(float delta) {
 		setInvulnerable(true);
 		dashTimer += delta;
-		if(dashTimer < DASH_DURATION){
+		if (dashTimer < DASH_DURATION) {
 			unit.velocity.set(velocity);
 		} else {
 			setState(State.RECOVER);
 		}
-		
+
 	}
-	
+
 	@Override
 	public void onDeath() {
 		setState(State.WAIT);
@@ -235,7 +240,7 @@ public class DashBroController extends EnemyController {
 		PooledEffect explode = SHMUP.explosion_particles.obtain();
 		unit.addParticles(explode, new ExplosionEnder(explode));
 	}
-	
+
 	@Override
 	public boolean isDead() {
 		return dead;
@@ -243,10 +248,10 @@ public class DashBroController extends EnemyController {
 
 	@Override
 	public void setInvulnerable(boolean set) {
-		if(currentState != State.DASH){
+		if (currentState != State.DASH) {
 			super.setInvulnerable(set);
 		}
-		if(isInvulnerable()){
+		if (isInvulnerable()) {
 			hbCol = Color.BLUE;
 		} else {
 			hbCol = Color.GREEN;
@@ -254,6 +259,7 @@ public class DashBroController extends EnemyController {
 	}
 
 	Color hbCol = Color.GREEN;
+
 	@Override
 	public void drawHitbox(ShapeRenderer shapes) {
 		Color c = shapes.getColor();
@@ -263,7 +269,8 @@ public class DashBroController extends EnemyController {
 		shapes.setColor(hbCol);
 		shapes.polygon(hitbox.getTransformedVertices());
 		shapes.setColor(Color.RED);
-		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(), DASH_THRESHOLD);
+		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(),
+				DASH_THRESHOLD);
 		shapes.setColor(c);
 	}
 
@@ -271,16 +278,18 @@ public class DashBroController extends EnemyController {
 	public Polygon getHitBox() {
 		return hitbox;
 	}
-	
+
 	@Override
-	public void draw(SpriteBatch batch){
+	public void draw(SpriteBatch batch) {
+		center.setPosition(unit.getX(), unit.getY());
+		shield.setPosition(unit.getX(), unit.getY());
 		center.draw(batch);
 		unit.draw(batch);
 		shield.setVisible(isInvulnerable());
 		shield.draw(batch);
 	}
-	
-	public final int pointValue(){
+
+	public final int pointValue() {
 		return 1;
 	}
 
@@ -288,15 +297,20 @@ public class DashBroController extends EnemyController {
 	public void applyShield() {
 		setInvulnerable(true);
 	}
-	
+
 	@Override
 	public TextureRegion radarMarker() {
-		switch(currentState){
+		switch (currentState) {
 		case DASH:
 		case WAIT:
 			return dashMarker;
 		default:
 			return marker;
 		}
+	}
+	
+	@Override
+	public boolean isSeperable() {
+		return true;
 	}
 }

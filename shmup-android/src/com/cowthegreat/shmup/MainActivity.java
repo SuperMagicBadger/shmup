@@ -17,7 +17,7 @@ public class MainActivity extends AndroidApplication {
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         cfg.useGL20 = true;
         
-        initialize(new SHMUP(new AndroidPlayerControler()), cfg);
+        initialize(new SHMUP(new AndroidPlayerControler2()), cfg);
     }
     
 //    @Override

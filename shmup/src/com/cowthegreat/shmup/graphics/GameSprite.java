@@ -9,11 +9,10 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.cowthegreat.shmup.SHMUP;
 
 public class GameSprite extends Sprite {
 
-	public float rotationalVelocity;
-	public Vector2 velocity;
 	private Animation anim;
 	private float timer;
 	private boolean visible;
@@ -22,6 +21,9 @@ public class GameSprite extends Sprite {
 
 	private HashMap<ParticleEffect, ParticleEffectListener> effectListeners;
 
+	public Vector2 velocity = SHMUP.vector_pool.obtain();
+	public float rotationalVelocity;
+	
 	public interface ParticleEffectListener {
 		public void effectFinished();
 	}
@@ -31,8 +33,6 @@ public class GameSprite extends Sprite {
 
 		emitterList = new ArrayList<ParticleEffect>();
 		effectListeners = new HashMap<ParticleEffect, GameSprite.ParticleEffectListener>();
-		velocity = new Vector2();
-		rotationalVelocity = 0;
 
 		visible = true;
 	}
@@ -44,8 +44,6 @@ public class GameSprite extends Sprite {
 
 		emitterList = new ArrayList<ParticleEffect>();
 		effectListeners = new HashMap<ParticleEffect, GameSprite.ParticleEffectListener>();
-		velocity = new Vector2();
-		rotationalVelocity = 0;
 
 		visible = true;
 	}
@@ -74,14 +72,13 @@ public class GameSprite extends Sprite {
 		}
 
 		rotate(rotationalVelocity * delta);
-
+		
 		if (getRotation() > 360)
 			rotate(-360);
 		if (getRotation() < 0)
 			rotate(360);
-
-		setX(getX() + velocity.x * delta);
-		setY(getY() + velocity.y * delta);
+		
+		move(velocity.x * delta, velocity.y * delta);
 	}
 
 	public void move(Vector2 v) {

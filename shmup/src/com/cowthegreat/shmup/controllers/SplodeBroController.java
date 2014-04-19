@@ -260,4 +260,8 @@ public class SplodeBroController extends EnemyController {
 		return state == State.CHARGE;
 	}
 
+	@Override
+	public boolean isSeperable() {
+		return !isExploding();
+	}
 }
