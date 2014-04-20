@@ -27,7 +27,6 @@ import com.cowthegreat.shmup.graphics.ParallaxCamera;
 import com.cowthegreat.shmup.graphics.Radar;
 import com.cowthegreat.shmup.level.ContinousRoundMap;
 import com.cowthegreat.shmup.level.GameMap;
-import com.cowthegreat.shmup.level.RoundMap;
 
 public class GameScreen implements Screen {
 	SHMUP game;

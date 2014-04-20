@@ -1,7 +1,6 @@
 package com.cowthegreat.shmup.level;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -13,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.Scoreboard;
+import com.cowthegreat.shmup.controllers.DashBroController;
 import com.cowthegreat.shmup.controllers.EnemyController;
 import com.cowthegreat.shmup.controllers.IdiotBroController;
 import com.cowthegreat.shmup.controllers.ObstacleController;
@@ -32,7 +32,7 @@ public class ContinousRoundMap implements GameMap {
 
 	public int IDIOT_LEVEL = 0;
 	public int MAX_IDIOT_BROS = 30;
-	
+
 	public int DASH_BRO_LEVEL = 2;
 	public int MAX_DASH_BROS = 6;
 
@@ -51,8 +51,9 @@ public class ContinousRoundMap implements GameMap {
 	TexturedCircle texCircle;
 
 	private int level;
+	private int nextLevelCounter;
 	private float levelTimer;
-	
+
 	private Spawner idiotSpawner;
 	private Spawner specialSpawner;
 
@@ -77,49 +78,106 @@ public class ContinousRoundMap implements GameMap {
 
 		bounds = new Rectangle(-SPAWN_RADIUS - 50, -SPAWN_RADIUS - 50,
 				SPAWN_RADIUS * 2 + 100, SPAWN_RADIUS * 2 + 100);
-		
-		idiotSpawner = new Spawner(){
+
+		idiotSpawner = new Spawner() {
 			@Override
 			public void spawn(float x, float y) {
-				System.out.println("doin a spawn");
-				IdiotBroController ctrl = new IdiotBroController();
-				ctrl.initialize(game.skn);
-				ctrl.setTracked(player);
-				ctrl.getControlled().setPosition(x, y);
-
-				activeUnits.add(ctrl);
+				if (activeUnits.size() < MAX_ENEMIES) {
+					System.out.println("spawning");
+					spawnIdiotBro(x, y);
+				}
 			}
+
 			@Override
 			public int count() {
-				return getIdiotCount();
+				return Math.min(3, MAX_ENEMIES - activeUnits.size());
 			}
+
 			@Override
 			public float spawnRate() {
-				return getIdiotSpawnRate();
+				if (level == 0)
+					return 4;
+				else
+					return  (float) (5f - Math.sqrt(level));
 			}
 		};
 		idiotSpawner.spawnRadius = SPAWN_RADIUS;
-		
-		specialSpawner = new Spawner(){
+
+		specialSpawner = new Spawner() {
+			int choice;
+
 			@Override
-			public void spawn(float x, float y) {	
+			public void spawn(float x, float y) {
+				if(choice < 15){
+					spawnSplodeBro(x, y);
+				} else if (choice < 50){
+					spawnShieldBro(x, y);
+				} else {
+					spawnDashBro(x, y);
+				}
 			}
+
 			@Override
 			public int count() {
-				return 0;
+				choice = SHMUP.rng.nextInt(100);
+				if (choice < 15) {
+					return 1;
+				}
+				if (choice < 50) {
+					return 2;
+				}
+				return SHMUP.rng.nextInt(3) + 2;
 			}
+
 			@Override
 			public float spawnRate() {
-				return 0;
+				return 10;
 			}
 		};
 		specialSpawner.spawnRadius = SPAWN_RADIUS;
+		specialSpawner.spawnTimer = 10;
 	}
 
 	// ====================================================
 	// ENEMY SPAWNING -------------------------------------
 	// ====================================================
+	
+	private void spawnDashBro(float x, float y) {
+		DashBroController ctrl = new DashBroController();
+		ctrl.initialize(game.skn);
+		ctrl.setTracked(player);
+		ctrl.getControlled().setPosition(x, y);
 
+		activeUnits.add(ctrl);
+	}
+
+	private void spawnShieldBro(float x, float y) {
+		ShieldBroController ctrl = new ShieldBroController();
+		ctrl.initialize(game.skn);
+		ctrl.setTracked(player);
+		ctrl.getControlled().setPosition(x, y);
+
+		activeUnits.add(ctrl);
+	}
+
+	private void spawnSplodeBro(float x, float y) {
+		SplodeBroController ctrl = new SplodeBroController();
+		ctrl.initialize(game.skn);
+		ctrl.setTracked(player);
+		ctrl.getControlled().setPosition(x, y);
+
+		activeUnits.add(ctrl);
+	}
+
+	private void spawnIdiotBro(float x, float y) {
+		IdiotBroController ctrl = new IdiotBroController();
+		ctrl.initialize(game.skn);
+		ctrl.setTracked(player);
+		ctrl.getControlled().setPosition(x, y);
+
+		activeUnits.add(ctrl);
+	}
+	
 	private void despawn(int index) {
 		activeUnits.remove(index);
 	}
@@ -133,11 +191,18 @@ public class ContinousRoundMap implements GameMap {
 	public void update(float delta) {
 		qt.clear();
 
+		// udate level
+		if (nextLevelCounter <= 0) {
+			level++;
+			nextLevelCounter = 10;
+		}
+
 		// update timers
 		levelTimer += delta;
-		
+
 		// update spawners
 		idiotSpawner.update(delta);
+		specialSpawner.update(delta);
 
 		// update obstacles
 		for (ObstacleController oc : obstacles) {
@@ -218,6 +283,7 @@ public class ContinousRoundMap implements GameMap {
 						activeUnits.get(i).damage(1);
 						if (activeUnits.get(i).isDead()) {
 							game.score.currentKills++;
+							nextLevelCounter--;
 						}
 					}
 				} else if (activeUnits.get(i) instanceof SplodeBroController) {
@@ -251,26 +317,6 @@ public class ContinousRoundMap implements GameMap {
 	// ====================================================
 	// LEVEL INFORMATION ----------------------------------
 	// ====================================================
-	
-	private int getIdiotCount() {
-		return 3;
-	}
-	
-	private float getIdiotSpawnRate(){
-		return 2;
-	}
-
-	private float getDashProbability() {
-		return 0.25f;
-	}
-
-	private float getShieldProbability() {
-		return 0.15f;
-	}
-
-	private float getSplodeCount() {
-		return 0.05f;
-	}
 
 	@Override
 	public int getLevel() {
@@ -287,6 +333,9 @@ public class ContinousRoundMap implements GameMap {
 		player = playerSprite;
 		activeUnits.clear();
 		level = 0;
+		nextLevelCounter = 0;
+		idiotSpawner.reset();
+		specialSpawner.reset();
 	}
 
 	@Override

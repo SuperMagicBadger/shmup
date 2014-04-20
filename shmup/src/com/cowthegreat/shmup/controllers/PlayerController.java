@@ -37,7 +37,7 @@ public abstract class PlayerController implements UnitController {
 
 	public static final float HITBOX_REST_SCALE_X = 0.5f;
 	public static final float HITBOX_REST_SCALE_Y = 0.5f;
-	public static final float HITBOX_ACTIVE_SCALE_X = 2.75f;
+	public static final float HITBOX_ACTIVE_SCALE_X = 4;
 	public static final float HITBOX_ACTIVE_SCALE_Y = 2.75f;
 
 	// vars

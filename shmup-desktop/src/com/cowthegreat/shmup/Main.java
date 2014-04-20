@@ -40,8 +40,8 @@ public class Main {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "shmup";
 		cfg.useGL20 = true;
-		cfg.width = 480;
-		cfg.height = 320;
+		cfg.width = 680;
+		cfg.height = 480;
 		
 		new LwjglApplication(new SHMUP(new PCPlayerController()), cfg);
 	}

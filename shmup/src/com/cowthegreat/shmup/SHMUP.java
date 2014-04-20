@@ -33,7 +33,7 @@ public class SHMUP extends Game {
 	public Scoreboard score;
 	public Settings settings;
 	public PlayerController playerControls;
-	public float gameWidth = 512, gameHeight;
+	public float gameWidth = 640, gameHeight;
 	public float screenRatio;
 	private HashMap<String, Screen> screenMap;
 	

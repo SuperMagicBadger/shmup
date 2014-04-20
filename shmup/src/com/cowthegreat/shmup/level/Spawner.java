@@ -16,7 +16,7 @@ public abstract class Spawner {
 	public void update(float delta){
 		spawnTimer -= delta;
 		if(spawnTimer <= 0){
-			System.out.println("spawning time");
+			spawnIndex = SHMUP.rng.nextFloat();
 			spawnTimer = spawnRate();
 			int c = count();
 			for(int i = 0; i < c; i++){
@@ -32,6 +32,11 @@ public abstract class Spawner {
 
 	public float spawnY(float i) {
 		return (float) Math.sin(2 * Math.PI * i) * spawnRadius + center.y;
+	}
+	
+	public void reset(){
+		spawnTimer = 0;
+		spawnIndex = 0;
 	}
 	
 	public abstract int count();
