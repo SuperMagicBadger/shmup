@@ -30,18 +30,6 @@ public class ContinousRoundMap implements GameMap {
 	public float SPAWN_RADIUS = 750;
 	public int MAX_ENEMIES = 30;
 
-	public int IDIOT_LEVEL = 0;
-	public int MAX_IDIOT_BROS = 30;
-
-	public int DASH_BRO_LEVEL = 2;
-	public int MAX_DASH_BROS = 6;
-
-	public int SHIELD_BRO_LEVEL = 3;
-	public int MAX_SHIELD_BROS = 4;
-
-	public int SPLODE_BRO_LEVEL = 4;
-	public int MAX_SPLODE_BROS = 2;
-
 	private QuadTree qt;
 	private ArrayList<EnemyController> activeUnits;
 	private ArrayList<ObstacleController> obstacles;
@@ -336,6 +324,7 @@ public class ContinousRoundMap implements GameMap {
 		nextLevelCounter = 0;
 		idiotSpawner.reset();
 		specialSpawner.reset();
+		specialSpawner.spawnTimer = 5;
 	}
 
 	@Override

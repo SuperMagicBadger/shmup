@@ -10,8 +10,8 @@ import com.badlogic.gdx.files.FileHandle;
 public class Settings {
 	public static final String SETTINGS_FILE = "SETTINGS";
 
-	public float sensitivityX = 2;
-	public float sensitivityY = 2;
+	public float sensitivityX = 1;
+	public float sensitivityY = 1;
 	public float smoothing = 0.95f;
 	public boolean dashTowardTap = false;
 	public boolean drawHitboxes = false;

@@ -12,7 +12,10 @@ public class AndroidPlayerControler2 extends PlayerController {
 
 	Vector3 zeroTilt = null;
 	public float deadZone = 0.15f;
-	private float runningX, runningY;
+	private float runningX, runningY, runningZ;
+	Vector3 v3 = new Vector3();
+	Vector3 vax = new Vector3();
+	Vector3 vaz = new Vector3();
 	Vector2 v = new Vector2();
 
 	@Override
@@ -21,38 +24,41 @@ public class AndroidPlayerControler2 extends PlayerController {
 			reset();
 		}
 
-		float ax = -getSmoothedY();
-		float ay = getSmoothedX();
-		float az = Gdx.input.getAccelerometerZ() - zeroTilt.z + 10;
-		float angleH = (float) Math.toDegrees(Math.asin(ay
-				/ (Math.sqrt(ay * ay + az * az))));
-		float angleV = -1
-				* (float) Math.toDegrees(Math.asin(ax
-						/ (Math.sqrt(ax * ax + az * az))));
-
 		if (!isDead()) {
-
 			if (Gdx.input.justTouched()) {
 				setDash(Gdx.input.getX(), Gdx.input.getY());
+			} else {
+				v3.set(getSmoothedY(), getSmoothedX(), getSmoothedZ());		
+				v.x = v3.dot(vaz);
+				v.y = v3.dot(vax);
+				if(zeroTilt.z > 0){
+					v.y *= -1;
+				}
+
+				if (v.len() < deadZone) {
+					v.set(0, 0);
+				}
+				
+				v.x *= game.settings.sensitivityX;
+				v.y *= game.settings.sensitivityY;
+				v.limit(1);
 			}
 		}
-		v.set(angleH / 90f * game.settings.sensitivityX,
-				angleV / 90f * game.settings.sensitivityY).limit(1);
-
-		if (zeroTilt.z < 0) {
-			v.scl(-1);
-		}
-
-		if (v.len() < deadZone) {
-			v.set(0, 0);
-		}
+		
 		updateMovement(delta, v.x, v.y);
 	}
 
 	@Override
 	public void reset() {
-		zeroTilt = new Vector3(Gdx.input.getAccelerometerY(),
-				Gdx.input.getAccelerometerX(), Gdx.input.getAccelerometerZ());
+		zeroTilt = new Vector3(Gdx.input.getAccelerometerX(),
+				Gdx.input.getAccelerometerY(), Gdx.input.getAccelerometerZ());
+		zeroTilt.nor();
+		
+		vax = new Vector3(1, 0, 0).nor();
+		vaz = new Vector3(zeroTilt);
+		
+		vaz.crs(vax).nor();
+		vax.set(vaz).crs(zeroTilt).nor();
 	}
 
 	private float getSmoothedX() {
@@ -66,29 +72,50 @@ public class AndroidPlayerControler2 extends PlayerController {
 	private float getSmoothedY() {
 		if (zeroTilt == null)
 			return 0;
-		float raw = -(Gdx.input.getAccelerometerX() - zeroTilt.y);
+		float raw = (Gdx.input.getAccelerometerX() - zeroTilt.y);
 		runningY = runningY * 0.75f + (1 - 0.75f) * raw;
-		if (runningY == 0) {
-		}
 		return runningY;
+	}
+
+	private float getSmoothedZ() {
+		if (zeroTilt == null)
+			return 0;
+		float raw = (Gdx.input.getAccelerometerZ() - zeroTilt.z);
+		runningZ = runningZ * 0.75f + (1 - 0.75f) * raw;
+		return runningZ;
+
 	}
 
 	@Override
 	public void setMesage(Label l, Format f) {
-		float ax = Gdx.input.getAccelerometerX() - zeroTilt.y;
-		float ay = Gdx.input.getAccelerometerY() - zeroTilt.x;
-		float az = Gdx.input.getAccelerometerZ() - zeroTilt.z + 10;
-		float angleH = Math.signum(zeroTilt.z)
-				* (float) Math.toDegrees(Math.asin(ay
-						/ (Math.sqrt(ay * ay + az * az))));
-		float angleV = -1
-				* Math.signum(zeroTilt.z)
-				* (float) Math.toDegrees(Math.asin(ax
-						/ (Math.sqrt(ax * ax + az * az))));
+		
+		Vector2 vel = new Vector2();
+		
+		float ax = Gdx.input.getAccelerometerX();
+		float ay = Gdx.input.getAccelerometerY();
+		float az = Gdx.input.getAccelerometerZ();
+		Vector3 v3 = new Vector3(ax, ay, az).nor();
+		
+		vel.x = v3.dot(vax);
+		vel.y = v3.dot(vaz);
+		
+		float lengthH = (float) (Math.sqrt(ay * ay + az * az));
+		float angleH = (float) Math.toDegrees(Math.acos(ay / lengthH));
+		float lengthV = (float) (Math.sqrt(ax * ax + az * az));
+		float angleV = (float) Math.toDegrees(Math.acos(ax / lengthV));
 
-		l.setText("x: " + f.format(ax) + " y: " + f.format(ay) + " z: "
-				+ f.format(az) + " yz: " + f.format(angleH) + " xz: "
-				+ f.format(angleV));
+		l.setText(
+				"zero: " + zeroTilt +
+				"\nvax: " + vax +
+				"\nvaz: " + vaz +
+				"\nvel: " + f.format(vel.x) + ":" + f.format(vel.y) +
+				"\nx: " + f.format(ax) +
+				"\ny: " + f.format(ay) +
+				"\nz: " + f.format(az) + 
+				"\nlyz: " + f.format(lengthH) + 
+				"\nlxz: " + f.format(lengthV) + 
+				"\nyz: " + f.format(angleH) + 
+				"\nxz: " + f.format(angleV));
 
 	}
 }
