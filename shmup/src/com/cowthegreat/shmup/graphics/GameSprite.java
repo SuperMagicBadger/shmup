@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.cowthegreat.shmup.SHMUP;
 
 public class GameSprite extends Sprite {
@@ -24,6 +25,8 @@ public class GameSprite extends Sprite {
 	public Vector2 velocity = SHMUP.vector_pool.obtain();
 	public float rotationalVelocity;
 	
+	Array<GameSprite> children;
+	
 	public interface ParticleEffectListener {
 		public void effectFinished();
 	}
@@ -33,6 +36,7 @@ public class GameSprite extends Sprite {
 
 		emitterList = new ArrayList<ParticleEffect>();
 		effectListeners = new HashMap<ParticleEffect, GameSprite.ParticleEffectListener>();
+		children = new Array<GameSprite>();
 
 		visible = true;
 	}
@@ -44,8 +48,13 @@ public class GameSprite extends Sprite {
 
 		emitterList = new ArrayList<ParticleEffect>();
 		effectListeners = new HashMap<ParticleEffect, GameSprite.ParticleEffectListener>();
+		children = new Array<GameSprite>();
 
 		visible = true;
+	}
+	
+	public void addChild(GameSprite gs){
+		children.add(gs);
 	}
 
 	public void update(float delta) {
@@ -55,7 +64,11 @@ public class GameSprite extends Sprite {
 			setSize(tr.getRegionWidth(), tr.getRegionHeight());
 			setRegion(anim.getKeyFrame(timer));
 		}
-
+		
+		for(GameSprite gs : children){
+			gs.update(delta);
+		}
+		
 		for (int i = emitterList.size() - 1; i >= 0; i--) {
 			emitterList.get(i).setPosition(getX() + getWidth() / 2f,
 					getY() + getHeight() / 2f);
@@ -120,6 +133,18 @@ public class GameSprite extends Sprite {
 			return;
 		for (int i = 0; i < emitterList.size(); i++) {
 			emitterList.get(i).draw(spriteBatch);
+		}
+		for(GameSprite gs : children){
+			gs.move(getX(), getY());
+			float rot = gs.getRotation();
+			float sx = gs.getScaleX();
+			float sy = gs.getScaleY();
+			gs.setRotation(getRotation());
+			gs.setScale(getScaleX(), getScaleY());
+			gs.draw(spriteBatch);
+			gs.setRotation(rot);
+			gs.setScale(sx, sy);
+			gs.move(-getX(), -getY());
 		}
 		super.draw(spriteBatch);
 	}

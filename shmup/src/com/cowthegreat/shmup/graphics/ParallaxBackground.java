@@ -55,8 +55,8 @@ public class ParallaxBackground {
 		}
 		
 		public void draw(SpriteBatch batch){
-			for(int i = -1; offsetX + x() + texture.getRegionWidth() * i < width(); i++){
-				for(int j = -1; offsetY + y() + texture.getRegionHeight() * j < height(); j++){
+			for(int i = -1; offsetX + x() + texture.getRegionWidth() * i <= right(); i++){
+				for(int j = -1; offsetY + y() + texture.getRegionHeight() * j <= top(); j++){
 					batch.draw(texture, offsetX + x() + texture.getRegionWidth() * i, offsetY + y() + texture.getRegionHeight() * j);
 				}
 			}
@@ -70,11 +70,11 @@ public class ParallaxBackground {
 			return cam.position.y - (cam.viewportHeight / 2f);
 		}
 		
-		private float width(){
+		private float right(){
 			return cam.position.x + (cam.viewportWidth / 2f);
 		}
 		
-		private float height(){
+		private float top(){
 			return cam.position.y + (cam.viewportHeight / 2f);
 		}
 		

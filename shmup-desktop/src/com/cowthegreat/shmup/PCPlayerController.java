@@ -46,6 +46,12 @@ public class PCPlayerController extends PlayerController {
 	public void reset(){
 		
 	}
+	
+	@Override
+	public void setAngle(float x, float y, float z) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	@Override
 	public void setMesage(Label l, Format f) {

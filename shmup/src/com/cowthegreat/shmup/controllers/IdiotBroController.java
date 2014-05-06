@@ -26,6 +26,7 @@ public class IdiotBroController extends EnemyController {
 	
 	Polygon hitbox;
 	GameSprite body;
+	GameSprite shield;
 	boolean dead;
 	
 	@Override
@@ -33,6 +34,9 @@ public class IdiotBroController extends EnemyController {
 		body = new GameSprite(s.getRegion("bro"));
 		body.setRotation(SHMUP.rng.nextFloat() * 360);
 		body.setScale(1.5f);
+		
+		shield = new GameSprite(s.getRegion("bro_shield"));
+		body.addChild(shield);
 		
 		float[] points = new float[]{
 				0, body.getHeight(),
@@ -110,6 +114,7 @@ public class IdiotBroController extends EnemyController {
 	@Override
 	public void draw(SpriteBatch batch) {
 		hitbox.setPosition(body.getX(), body.getY());
+		shield.setVisible(isInvulnerable());
 		body.draw(batch);
 	}
 	

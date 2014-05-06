@@ -1,317 +1,329 @@
 package com.cowthegreat.shmup.screens;
 
+import java.text.Format;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveByAction;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.ParallelAction;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.Align;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.Scoreboard.Score;
+import com.cowthegreat.shmup.graphics.GSImage;
+import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.ParallaxBackground;
 
 public class MainMenuScreen implements Screen {
+	public static String screenTag = "main_menu_2";
 
-	public static final String screenTag = "menu_scr";
-	Stage uiStage;
 	SHMUP game;
 
-	boolean doBack = false;
+	SpriteBatch batch;
+	Stage uiStage;
 	ParallaxBackground bg;
 
-	Table scoreTable;
-	Table aboutTabelOne;
-	Table aboutTableTwo;
-	Table aboutShieldTable;
-	Table aboutSplodeTable;
-	
-	ImageButton roundLevel, rectLevel;
-	TextButton ngBackBtn;
+	Table mainTable;
+	Table aboutTable;
+	Table highScoreTable;
+	Table newGameTable;
 
-	public MainMenuScreen(SHMUP game) {
-		// INIT VARIABLES
-		this.game = game;
+	boolean drawDebug = false;
+	Array<Table> dt = new Array<Table>();
+
+	Format format;
+
+	Array<GameSprite> gsList = new Array<GameSprite>();
+
+	Pool<Action> revealBottomUpPool = new Pool<Action>() {
+		protected Action newObject() {
+			return new RevealBottomUp();
+		}
+	};
+	Pool<Action> hideBottomDownPool = new Pool<Action>() {
+		protected Action newObject() {
+			return new HideBottomDown();
+		}
+	};
+	Pool<Action> hideSlideHorizPool = new Pool<Action>() {
+		@Override
+		protected Action newObject() {
+			return new HideSlideLeft();
+		}
+	};
+	Pool<Action> revealSlideHorizPool = new Pool<Action>() {
+		@Override
+		protected Action newObject() {
+			return new RevealSlideRight();
+		}
+	};
+	Pool<Action> hideSlideVertPool = new Pool<Action>(){
+		protected Action newObject() {
+			return new HideSlideVert();
+		};
+	};
+	Pool<Action> revealSlideVertPool = new Pool<Action>(){
+		protected Action newObject() {
+			return new RevealSlideVert();
+		};
+	};
+	
+	private class RevealBottomUp extends SequenceAction {
+		
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2, uiStage.getHeight() / 2
+						- getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(0));
+				initial.addAction(Actions.scaleTo(0.15f, 0.15f));
+
+				// do the reveal
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.alpha(1, 0.25f));
+				action.addAction(Actions.scaleTo(1, 1, 1f));
+
+				// compile everything
+				addAction(initial);
+				addAction(Actions.show());
+				addAction(action);
+
+				// set the pool to return to
+				setPool(revealBottomUpPool);
+
+			}
+		}
+	}
+
+	private class HideBottomDown extends SequenceAction {
+
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2, uiStage.getHeight() / 2
+						- getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(1));
+				initial.addAction(Actions.scaleTo(1, 1));
+
+				// do the hide
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.alpha(0, 0.25f));
+				action.addAction(Actions.scaleTo(0.25f, 0.25f, 0.25f));
+
+				// compile everything
+				addAction(initial);
+				addAction(action);
+				addAction(Actions.hide());
+
+				// set the pool to return to
+				setPool(hideBottomDownPool);
+			}
+		}
+
+	}
+
+	private class RevealSlideRight extends SequenceAction {
+
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2 - uiStage.getWidth(),
+						uiStage.getHeight() / 2 - getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(1));
+				initial.addAction(Actions.scaleTo(1, 1));
+
+				// do the hide
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.moveBy(uiStage.getWidth(), 0, 0.25f));
+
+				// compile everything
+				addAction(initial);
+				addAction(Actions.show());
+				addAction(action);
+
+				// set the pool to return to
+				setPool(revealSlideHorizPool);
+			}
+		}
+	}
+
+	private class HideSlideLeft extends SequenceAction {
+
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2, uiStage.getHeight() / 2
+						- getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(1));
+				initial.addAction(Actions.scaleTo(1, 1));
+
+				// do the hide
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.moveBy(-uiStage.getWidth(), 0, 0.25f));
+
+				// compile everything
+				addAction(initial);
+				addAction(action);
+				addAction(Actions.hide());
+
+				// set the pool to return to
+				setPool(hideSlideHorizPool);
+			}
+		}
+	}
+
+	private class HideSlideVert extends SequenceAction {
+
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2, uiStage.getHeight() / 2
+						- getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(1));
+				initial.addAction(Actions.scaleTo(1, 1));
+
+				// do the hide
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.moveBy(-uiStage.getWidth(), 0, 0.25f));
+
+				// compile everything
+				addAction(initial);
+				addAction(action);
+				addAction(Actions.hide());
+
+				// set the pool to return to
+				setPool(hideSlideHorizPool);
+			}
+		}
+	}
+	
+	private class RevealSlideVert extends SequenceAction {
+		
+		@Override
+		public void setActor(Actor actor) {
+			super.setActor(actor);
+			if (actor != null) {
+				// setup the initial conditions
+				ParallelAction initial = Actions.parallel();
+				initial.addAction(Actions.moveTo(uiStage.getWidth() / 2
+						- getActor().getWidth() / 2 - uiStage.getWidth(),
+						uiStage.getHeight() / 2 - getActor().getHeight() / 2));
+				initial.addAction(Actions.alpha(1));
+				initial.addAction(Actions.scaleTo(1, 1));
+
+				// do the hide
+				ParallelAction action = new ParallelAction();
+				action.addAction(Actions.moveBy(uiStage.getWidth(), 0, 0.25f));
+
+				// compile everything
+				addAction(initial);
+				addAction(Actions.show());
+				addAction(action);
+
+				// set the pool to return to
+				setPool(revealSlideHorizPool);
+			}
+		}
+	}
+	
+	// --------------------------------
+	// CONSTRUCTOR --------------------
+	// ================================
+
+	public MainMenuScreen(SHMUP shmupgame) {
+		game = shmupgame;
 		uiStage = new Stage();
 		uiStage.setViewport(game.gameWidth, game.gameHeight);
+		mainTable = generateMainMenuTable();
+		aboutTable = generateAboutTable();
+		highScoreTable = generateHighScoreTable();
+		newGameTable = generateNewGameTable();
+		uiStage.addActor(mainTable);
+		uiStage.addActor(aboutTable);
+		uiStage.addActor(highScoreTable);
+		uiStage.addActor(newGameTable);
 
-		// SET UP THE BACKGROUND
+		batch = uiStage.getSpriteBatch();
+
 		bg = new ParallaxBackground(uiStage.getCamera());
 		bg.addLayer(game.skn.getRegion("biggrid"), 2f, -0.25f);
 		bg.addLayer(game.skn.getRegion("littlegrid"), 2f, 2f);
 		bg.addLayer(game.skn.getRegion("bluestars"), 2f, 0f);
-
-		// LOAD STYLES
-		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
-		lStyle.fontColor = Color.WHITE;
-		TextButtonStyle tbStyle = game.skn.get("ui_text_button",
-				TextButtonStyle.class);
-
-		// INITIALIZE MAIN MENU
-		Table menuTable = new Table();
-		Label title = new Label("Vector\nDash", lStyle);
-		TextButton about = new TextButton("instructions", tbStyle);
-		TextButton newGame = new TextButton("new game", tbStyle);
-		TextButton settings = new TextButton("settings", tbStyle);
-		TextButton highScores = new TextButton("high scores", tbStyle);
-
-		title.setPosition(50, uiStage.getHeight() * 2f / 3f);
-		menuTable.add(about).fill().expandX().pad(0, 0, 10, 0).row();
-		menuTable.add(newGame).fill().expandX().pad(0, 0, 10, 0).row();
-		menuTable.add(settings).fill().expandX().pad(0, 0, 10, 0).row();
-		menuTable.add(highScores).fill().expandX();
-		menuTable.pack();
-		menuTable.setPosition(uiStage.getWidth() - menuTable.getWidth() - 50,
-				40);
-
-		newGame.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				newGame();
-			}
-		});
-
-		about.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				MoveToAction action = new MoveToAction();
-				action.setPosition(0, -uiStage.getHeight());
-				action.setDuration(0.5f);
-				action.setInterpolation(Interpolation.linear);
-				uiStage.addAction(action);
-				doBack = true;
-				Gdx.input.setCatchBackKey(true);
-			}
-		});
-
-		highScores.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				scoreTable.clear();
-				for (Score s : MainMenuScreen.this.game.score.highScores) {
-					Label l = new Label(s.toString(),
-							MainMenuScreen.this.game.skn, "font_25",
-							Color.WHITE);
-					scoreTable.add(l).align(Align.center).row();
-				}
-				scoreTable.pack();
-				scoreTable.setPosition(
-						uiStage.getWidth() / 2 - scoreTable.getWidth() / 2, -15
-								- scoreTable.getHeight());
-
-				MoveToAction action = new MoveToAction();
-				action.setPosition(0, uiStage.getHeight());
-				action.setDuration(0.5f);
-				action.setInterpolation(Interpolation.linear);
-				uiStage.addAction(action);
-				doBack = true;
-				Gdx.input.setCatchBackKey(true);
-			}
-		});
-		
-		settings.addListener(new ClickListener(){
-			public void clicked(InputEvent event, float x, float y) {
-				MainMenuScreen.this.game.setScreen(SettingsScreen.screenTag, screenTag);
-			}
-		});
-
-		uiStage.addActor(title);
-		uiStage.addActor(menuTable);
-
-		// INITIALIZE ABOUT SCREENS
-
-		// images and text for page one
-		aboutTabelOne = new Table();
-
-		Image playerImage = new Image(game.skn.getDrawable("player"));
-		Label playerDesc = new Label(
-				"tilt the screen to move.\ntap to dash through enemies.",
-				lStyle);
-
-		Image dashBroImage = new Image(game.skn.getDrawable("dash_bro"));
-		Label dashBroDesc = new Label(
-				"Dash-Bros mindlessly follow\nthe player and dash\nwhen in range",
-				lStyle);
-
-		aboutTabelOne.add(playerImage);
-		aboutTabelOne.add(playerDesc).padBottom(50);
-		aboutTabelOne.row();
-		aboutTabelOne.add(dashBroImage);
-		aboutTabelOne.add(dashBroDesc);
-		aboutTabelOne.pack();
-
-		aboutTabelOne.setPosition(
-				uiStage.getWidth() / 2 - aboutTabelOne.getWidth() / 2 - 25,
-				uiStage.getHeight() + uiStage.getHeight() / 2
-						- aboutTabelOne.getHeight() / 2);
-
-		// images and text for page two
-		aboutTableTwo = new Table();
-
-		Image shieldBroImage = new Image(game.skn.getDrawable("shield_bro"));
-		Label shieldBroDesc = new Label(
-				"Shield-Bros keep their distance\n and shield allies in range",
-				lStyle);
-
-		Image splodeBroImage = new Image(game.skn.getDrawable("sploode_bro"));
-		Label splodeBroDesc = new Label(
-				"Splode-Bros follow the player and\nexplode, destroying everything\nin range",
-				lStyle);
-
-		aboutTableTwo.add(shieldBroImage);
-		aboutTableTwo.add(shieldBroDesc).padBottom(50);
-		aboutTableTwo.row();
-		aboutTableTwo.add(splodeBroImage);
-		aboutTableTwo.add(splodeBroDesc);
-		aboutTableTwo.pack();
-
-		aboutTableTwo.setPosition(
-				uiStage.getWidth() / 2 - aboutTableTwo.getWidth() / 2
-						+ uiStage.getWidth() + 25, uiStage.getHeight()
-						+ uiStage.getHeight() / 2 - aboutTableTwo.getHeight()
-						/ 2);
-
-		TextButton backButton = new TextButton("back", tbStyle);
-		backButton.setPosition(uiStage.getWidth() / 2 - backButton.getWidth()
-				/ 2, uiStage.getHeight() + 15);
-
-		// back button
-		backButton.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				MoveToAction action = new MoveToAction();
-				action.setPosition(0, 0);
-				action.setDuration(0.5f);
-				action.setInterpolation(Interpolation.linear);
-				uiStage.addAction(action);
-				Gdx.input.setCatchBackKey(false);
-			}
-		});
-
-		// about scroll buttons
-		final TextButton leftBtn = new TextButton("<", tbStyle);
-		final TextButton rightBtn = new TextButton(">", tbStyle);
-
-		leftBtn.setPosition(10, uiStage.getHeight() + uiStage.getHeight() / 2);
-		rightBtn.setPosition(uiStage.getWidth() - rightBtn.getWidth() - 10,
-				uiStage.getHeight() + uiStage.getHeight() / 2);
-
-		leftBtn.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				MoveByAction a = new MoveByAction();
-				a.setAmount(uiStage.getWidth(), 0);
-				a.setDuration(0.25f);
-				a.setInterpolation(Interpolation.linear);
-				aboutTabelOne.addAction(a);
-				a = new MoveByAction();
-				a.setAmount(uiStage.getWidth(), 0);
-				a.setDuration(0.25f);
-				a.setInterpolation(Interpolation.linear);
-				aboutTableTwo.addAction(a);
-				rightBtn.setVisible(true);
-				leftBtn.setVisible(false);
-			}
-		});
-		rightBtn.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				MoveByAction a = new MoveByAction();
-				a.setAmount(-uiStage.getWidth(), 0);
-				a.setDuration(0.25f);
-				a.setInterpolation(Interpolation.linear);
-				aboutTabelOne.addAction(a);
-				a = new MoveByAction();
-				a.setAmount(-uiStage.getWidth(), 0);
-				a.setDuration(0.25f);
-				a.setInterpolation(Interpolation.linear);
-				aboutTableTwo.addAction(a);
-				rightBtn.setVisible(false);
-				leftBtn.setVisible(true);
-			}
-		});
-
-		leftBtn.setVisible(false);
-
-		uiStage.addActor(aboutTabelOne);
-		uiStage.addActor(aboutTableTwo);
-
-		uiStage.addActor(backButton);
-		uiStage.addActor(leftBtn);
-		uiStage.addActor(rightBtn);
-
-		// SET UP HIGH SCORE SETUP
-		scoreTable = new Table();
-		TextButton highscoreBackButton = new TextButton("Back", tbStyle);
-
-		highscoreBackButton.setPosition(uiStage.getWidth() / 2
-				- highscoreBackButton.getWidth() / 2, 15 - uiStage.getHeight());
-
-		highscoreBackButton.addListener(new ClickListener() {
-			@Override
-			public void clicked(InputEvent event, float x, float y) {
-				MoveToAction action = new MoveToAction();
-				action.setPosition(0, 0);
-				action.setDuration(0.5f);
-				action.setInterpolation(Interpolation.linear);
-				uiStage.addAction(action);
-				Gdx.input.setCatchBackKey(false);
-			}
-		});
-		
-		// NEW GAME LEVEL SELECTION
-		
-		
-//		ngBackBtn = new TextButton("back", tbStyle);
-//		ngBackBtn.setPosition(uiStage.getWidth() / 2 + ngBackBtn.getWidth() / 2, ngBackBtn.getHeight() + 50);
-//		ngBackBtn.addListener(new ClickListener(){
-//			@Override
-//			public void clicked(InputEvent event, float x, float y) {
-//				ngBack();
-//			}
-//		});
-//		
-
-		uiStage.addActor(scoreTable);
-		uiStage.addActor(highscoreBackButton);
-
 	}
 
-	public void newGame(){
-		game.setScreen(GameScreen.screenTag);
-	}
-	
-//	public void ngBack(){
-//		
-//	}
-	
+	// --------------------------------
+	// RENDERING ----------------------
+	// ================================
+
 	@Override
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
+		for (GameSprite gs : gsList) {
+			gs.update(delta);
+		}
+
 		bg.slide(delta * 20, delta * 20);
 
+		Color c = batch.getColor();
+		float oa = c.a;
+		c.a = 1;
+		batch.setColor(c);
+		batch.begin();
+		bg.draw(batch);
+		batch.end();
+		c.a = oa;
+		batch.setColor(c);
+
 		uiStage.act(delta);
-		uiStage.getSpriteBatch().begin();
-		bg.draw(uiStage.getSpriteBatch());
-		uiStage.getSpriteBatch().end();
 		uiStage.draw();
+		
+		if (drawDebug) {
+			mainTable.debug();
+			aboutTable.debug();
+			highScoreTable.debug();
+			for (Table t : dt) {
+				t.debug();
+			}
+			Table.drawDebug(uiStage);
+		}
 	}
 
 	@Override
@@ -320,47 +332,316 @@ public class MainMenuScreen implements Screen {
 
 	@Override
 	public void show() {
-		InputMultiplexer plexer = new InputMultiplexer();
-		// SET UP BACK KEY
-		plexer.addProcessor(new InputAdapter() {
-			@Override
-			public boolean keyDown(int keycode) {
-				if ((keycode == Keys.BACK || keycode == Keys.ESCAPE) && doBack) {
-					MoveToAction action = new MoveToAction();
-					action.setPosition(0, 0);
-					action.setDuration(0.5f);
-					action.setInterpolation(Interpolation.linear);
-					uiStage.addAction(action);
-					Gdx.input.setCatchBackKey(false);
-					doBack = false;
-					return true;
-				}
-				return false;
-			}
-		});
-		plexer.addProcessor(uiStage);
-		Gdx.input.setInputProcessor(plexer);
-		SHMUP.theme.loop();
+		resetHighScores();
+
+		// show main table
+		mainTable.setPosition(
+				uiStage.getWidth() / 2 - mainTable.getWidth() / 2,
+				uiStage.getHeight() / 2 - mainTable.getHeight() / 2);
+		mainTable.setVisible(true);
+
+		// hide others
+		aboutTable.setVisible(false);
+		highScoreTable.setVisible(false);
+		newGameTable.setVisible(false);
+
+		Gdx.input.setInputProcessor(uiStage);
 	}
 
 	@Override
 	public void hide() {
-		SHMUP.theme.stop();
 	}
 
 	@Override
 	public void pause() {
-		SHMUP.theme.pause();
 	}
 
 	@Override
 	public void resume() {
-		SHMUP.theme.resume();
 	}
 
 	@Override
 	public void dispose() {
 		uiStage.dispose();
+		revealBottomUpPool.clear();
+		hideBottomDownPool.clear();
+		revealSlideHorizPool.clear();
+		hideSlideHorizPool.clear();
+		revealBottomUpPool.clear();
+	}
+
+	public void newGame() {
+		game.setScreen(GameScreen.screenTag);
+	}
+
+	public void resetHighScores() {
+		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
+		Table t = (Table) highScoreTable.getChildren().get(0);
+		t.clear();
+
+		for (Score s : game.score.highScores) {
+			Label l = new Label(" Wave: " + s.wave + " Score: " + s.scoreValue
+					+ " Time: " + s.time, lStyle);
+			t.add(l).row();
+		}
+	}
+
+	// ------------------------------------------
+	// GENERATE TABLES --------------------------
+	// ==========================================
+
+	private Table generateMainMenuTable() {
+
+		// STYLES
+		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
+		lStyle.fontColor = Color.WHITE;
+		TextButtonStyle tbStyle = game.skn.get("ui_text_button",
+				TextButtonStyle.class);
+
+		// BUILD THE TABLE
+		Table table = new Table();
+		Table menuTable = new Table();
+		Label title = new Label("Vector\nDash", lStyle);
+		TextButton about = new TextButton("instructions", tbStyle);
+		TextButton newGame = new TextButton("new game", tbStyle);
+		TextButton settings = new TextButton("settings", tbStyle);
+		TextButton highScores = new TextButton("high scores", tbStyle);
+
+		menuTable.addActor(title);
+		title.setPosition(50, uiStage.getHeight() * 2f / 3f);
+		menuTable.add(about).fill().expandX().pad(0, 0, 10, 0).row();
+		menuTable.add(newGame).fill().expandX().pad(0, 0, 10, 0).row();
+		menuTable.add(settings).fill().expandX().pad(0, 0, 10, 0).row();
+		menuTable.add(highScores).fill().expandX();
+		menuTable.pack();
+
+		// MAKE BUTTONS DO THINGS
+		newGame.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				newGameTable.addAction(revealBottomUpPool.obtain());
+				mainTable.addAction(hideSlideHorizPool.obtain());
+			}
+		});
+
+		about.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				aboutTable.addAction(revealBottomUpPool.obtain());
+				mainTable.addAction(hideSlideHorizPool.obtain());
+			}
+		});
+
+		highScores.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				resetHighScores();
+				highScoreTable.addAction(revealBottomUpPool.obtain());
+				mainTable.addAction(hideSlideHorizPool.obtain());
+			}
+		});
+
+		settings.addListener(new ClickListener() {
+			public void clicked(InputEvent event, float x, float y) {
+				game.setScreen(SettingsScreen.screenTag, screenTag);
+			}
+		});
+
+		table.addActor(title);
+		title.setPosition(50, uiStage.getHeight() * 2f / 3f);
+		table.addActor(menuTable);
+		menuTable.setPosition(uiStage.getWidth() - menuTable.getWidth() - 50,
+				40);
+		table.setWidth(uiStage.getWidth());
+		table.setHeight(uiStage.getHeight());
+
+		dt.add(menuTable);
+
+		return table;
+	}
+	
+	private Table generateNewGameTable(){
+		Table t = new Table();
+		
+		// STYLES
+		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
+		lStyle.fontColor = Color.WHITE;
+		TextButtonStyle tbStyle = game.skn.get("ui_text_button",
+				TextButtonStyle.class);
+		
+		// BUILD THE COMPONENTS
+		Label instrLabel = new Label("Select Tilt", lStyle);
+		ImageButton angleButton = new ImageButton(game.skn.getDrawable("45tilt"));
+		ImageButton flatButton = new ImageButton(game.skn.getDrawable("0tilt"));
+		ImageButton customButton = new ImageButton(game.skn.getDrawable("ctilt"));
+		TextButton backBtn = new TextButton("back", tbStyle);
+		
+		// MAKE BUTTONS DO THINGS
+		angleButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				game.playerControls.reset();
+				newGame();
+			}
+		});
+		flatButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				game.playerControls.reset();
+				newGame();
+			}
+		});
+		customButton.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				game.playerControls.reset();
+				newGame();
+			}
+		});
+		backBtn.addListener(new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				mainTable.addAction(revealSlideHorizPool.obtain());
+				newGameTable.addAction(hideBottomDownPool.obtain());
+			}
+		});
+		
+		// BUILD THE TABLE
+		t.add(instrLabel).colspan(3).center().row();
+		t.add(angleButton).pad(10);
+		t.add(flatButton).pad(10);
+		t.add(customButton).pad(10).row();
+		t.add(backBtn).colspan(3).center();
+		
+		return t;
+	}
+
+	private Table generateHighScoreTable() {
+		Table table = new Table();
+
+		// STYLES
+		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
+		lStyle.fontColor = Color.WHITE;
+		TextButtonStyle tbStyle = game.skn.get("ui_text_button",
+				TextButtonStyle.class);
+
+		// BUILD THE TABLE
+		Table scoreTable = new Table();
+
+		TextButton tBtn = new TextButton("back", tbStyle);
+		tBtn.setPosition(uiStage.getWidth() / 2 - tBtn.getWidth() / 2,
+				15 - uiStage.getHeight());
+
+		// MAKE BUTTONS DO STUFF
+		tBtn.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				highScoreTable.addAction(hideBottomDownPool.obtain());
+				mainTable.addAction(revealSlideHorizPool.obtain());
+			}
+		});
+
+		table.add(scoreTable).padBottom(10).row();
+		table.add(tBtn);
+
+		dt.add(scoreTable);
+
+		return table;
+	}
+
+	private Table generateAboutTable() {
+		Table table = new Table();
+
+		// STYLES
+		LabelStyle lStyle = game.skn.get("title_label", LabelStyle.class);
+		lStyle.fontColor = Color.WHITE;
+		TextButtonStyle tbStyle = game.skn.get("ui_text_button",
+				TextButtonStyle.class);
+
+		// BUiLD THE SPRITES
+		GameSprite gsPlayer = new GameSprite(game.skn.getRegion("player"));
+//		GameSprite gsBro = new GameSprite(game.skn.getRegion("bro"));
+//		GameSprite gsDashBro = new GameSprite(game.skn.getRegion("dash_bro"));
+//		GameSprite gsDashBroGlow = new GameSprite(new Animation(0.1f, game.skn
+//				.getAtlas().findRegions("dash_bro_center"),
+//				Animation.LOOP_PINGPONG));
+//		GameSprite gsShieldBro = new GameSprite(
+//				game.skn.getRegion("shield_bro"));
+//		GameSprite gsShieldBroShield = new GameSprite(new Animation(0.2f,
+//				game.skn.getAtlas().findRegions("shield_bro_shield_anim"),
+//				Animation.LOOP_PINGPONG));
+//		GameSprite gsSplodeBro = new GameSprite(
+//				game.skn.getRegion("sploode_bro"));
+//		;
+//		GameSprite gsSplodeBroGlow = new GameSprite(new Animation(0.1f,
+//				game.skn.getAtlas().findRegions("splode_bro_center"),
+//				Animation.LOOP_PINGPONG));
+
+		gsPlayer.rotationalVelocity = 90;
+//		gsBro.rotationalVelocity = 90;
+//		gsDashBro.rotationalVelocity = 90;
+//		gsShieldBro.rotationalVelocity = 90;
+//		gsSplodeBro.rotationalVelocity = 90;
+//
+//		gsDashBro.addChild(gsDashBroGlow);
+//		gsShieldBro.addChild(gsShieldBroShield);
+//		gsSplodeBro.addChild(gsSplodeBroGlow);
+
+		gsList.add(gsPlayer);
+//		gsList.add(gsBro);
+//		gsList.add(gsDashBro);
+//		gsList.add(gsShieldBro);
+//		gsList.add(gsSplodeBro);
+
+		// MAKE THE STRINGS
+		String playerDesc = "tilt the screen to move. Tap\n"
+				+ "to dash. Dashing through\n" + "enemies destorys them.";
+
+		String spawnDesc = "As you destroy enemies the spawn rate increases\n"
+				+ "and more enemy types are introduced.";
+
+		// BUILD THE TABLE COMPONENTS
+		Table abt = new Table(game.skn);
+
+		GSImage imgPlayer = new GSImage(gsPlayer);
+		// GSImage imgIdiotBro = new GSImage(gsBro);
+		// GSImage imgDashBro = new GSImage(gsDashBro);
+		// GSImage imgShieldBro = new GSImage(gsShieldBro);
+		// GSImage imgSplodeBro = new GSImage(gsSplodeBro);
+
+		TextButton backBtn = new TextButton("back", tbStyle);
+		backBtn.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				aboutTable.addAction(hideBottomDownPool.obtain());
+				mainTable.addAction(revealSlideHorizPool.obtain());
+			}
+		});
+
+		// ASSEMBLE THE TABLE
+		abt.defaults().center().pad(20);
+		abt.add(imgPlayer).minSize(imgPlayer.getWidth(), imgPlayer.getHeight());
+		abt.add(playerDesc, "title_label").row();
+		abt.add(spawnDesc, "title_label").colspan(2).row();
+
+		// abt.add(imgIdiotBro).minSize(imgIdiotBro.getWidth(),
+		// imgIdiotBro.getHeight()).row();
+		// abt.add(imgDashBro).minSize(imgDashBro.getWidth(),
+		// imgDashBro.getHeight()).row();
+		// abt.add(imgShieldBro).minSize(imgShieldBro.getWidth(),
+		// imgShieldBro.getHeight()).row();
+		// abt.add(imgSplodeBro).minSize(imgSplodeBro.getWidth(),
+		// imgSplodeBro.getHeight()).row();
+
+		table.add(abt).padBottom(50f).top().row();
+		table.add(backBtn).bottom();
+
+		table.setWidth(uiStage.getWidth() * 2f / 3f);
+		table.setHeight(uiStage.getHeight() * 2f / 3f);
+
+		dt.add(abt);
+
+		return table;
 	}
 
 }

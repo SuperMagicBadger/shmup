@@ -28,8 +28,14 @@ public class ContinousRoundMap implements GameMap {
 	public float WIDTH;
 	public float HEIGHT;
 	public float SPAWN_RADIUS = 750;
+	public int INITIAL_ENEMIES = 10;
 	public int MAX_ENEMIES = 30;
+	public int MAXED_LEVEL = 5;
 
+	public float DASH_BRO_LEVEL = 1;
+	public float SHIELD_BRO_LEVEL = 2;
+	public float SPLODE_BRO_LEVEL = 3;
+	
 	private QuadTree qt;
 	private ArrayList<EnemyController> activeUnits;
 	private ArrayList<ObstacleController> obstacles;
@@ -70,7 +76,7 @@ public class ContinousRoundMap implements GameMap {
 		idiotSpawner = new Spawner() {
 			@Override
 			public void spawn(float x, float y) {
-				if (activeUnits.size() < MAX_ENEMIES) {
+				if (activeUnits.size() < getMaxEnemies()) {
 					System.out.println("spawning");
 					spawnIdiotBro(x, y);
 				}
@@ -78,15 +84,12 @@ public class ContinousRoundMap implements GameMap {
 
 			@Override
 			public int count() {
-				return Math.min(3, MAX_ENEMIES - activeUnits.size());
+				return normalCount();
 			}
 
 			@Override
 			public float spawnRate() {
-				if (level == 0)
-					return 4;
-				else
-					return  (float) (5f - Math.sqrt(level));
+				return normalSpawnRate();
 			}
 		};
 		idiotSpawner.spawnRadius = SPAWN_RADIUS;
@@ -96,9 +99,9 @@ public class ContinousRoundMap implements GameMap {
 
 			@Override
 			public void spawn(float x, float y) {
-				if(choice < 15){
+				if(choice < 25 && level >= SPLODE_BRO_LEVEL){
 					spawnSplodeBro(x, y);
-				} else if (choice < 50){
+				} else if (choice < 50 && level >= SHIELD_BRO_LEVEL){
 					spawnShieldBro(x, y);
 				} else {
 					spawnDashBro(x, y);
@@ -107,19 +110,23 @@ public class ContinousRoundMap implements GameMap {
 
 			@Override
 			public int count() {
-				choice = SHMUP.rng.nextInt(100);
+				if(getEnemyCount() >= getMaxEnemies()){
+					return 0;
+				}
+				choice = SHMUP.rng.nextInt(100 - getEnemyCount() * 2);
+				System.out.println("spawning a " + choice + " at enemy count " + getEnemyCount() + " and level " + getLevel());
 				if (choice < 15) {
 					return 1;
 				}
 				if (choice < 50) {
 					return 2;
 				}
-				return SHMUP.rng.nextInt(3) + 2;
+				return SHMUP.rng.nextInt(4) + 2;
 			}
 
 			@Override
 			public float spawnRate() {
-				return 10;
+				return specialSpawnRate();
 			}
 		};
 		specialSpawner.spawnRadius = SPAWN_RADIUS;
@@ -131,6 +138,7 @@ public class ContinousRoundMap implements GameMap {
 	// ====================================================
 	
 	private void spawnDashBro(float x, float y) {
+		System.out.println("spawning dash bro");
 		DashBroController ctrl = new DashBroController();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
@@ -140,6 +148,7 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnShieldBro(float x, float y) {
+		System.out.println("spawning shield bro");
 		ShieldBroController ctrl = new ShieldBroController();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
@@ -149,6 +158,7 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnSplodeBro(float x, float y) {
+		System.out.println("spawning splode bro");
 		SplodeBroController ctrl = new SplodeBroController();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
@@ -158,6 +168,7 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnIdiotBro(float x, float y) {
+		System.out.println("spawning bro");
 		IdiotBroController ctrl = new IdiotBroController();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
@@ -182,7 +193,7 @@ public class ContinousRoundMap implements GameMap {
 		// udate level
 		if (nextLevelCounter <= 0) {
 			level++;
-			nextLevelCounter = 10;
+			nextLevelCounter = nextLevelScore();
 		}
 
 		// update timers
@@ -316,6 +327,40 @@ public class ContinousRoundMap implements GameMap {
 		return 1;
 	}
 
+	public float normalSpawnRate(){
+		if (level == 0)
+			return 4;
+		else
+			return  (float) (5f - Math.sqrt(level));
+	}
+	
+	public int normalCount(){
+		return Math.min(3, getMaxEnemies() - activeUnits.size());
+	}
+	
+	public float specialSpawnRate(){
+		return 10;
+	}
+	
+	/*
+	 * enemies should max out around level 5, after
+	 * all the specials are introduced. 
+	 */
+	public int getMaxEnemies() {
+		return Math.min(MAX_ENEMIES, (level - 1) * (MAX_ENEMIES - INITIAL_ENEMIES) / (MAXED_LEVEL - 1) + INITIAL_ENEMIES);
+	}
+
+	private int getEnemyCount() {
+		return activeUnits.size();
+	}
+	
+	public int nextLevelScore(){
+		if(level < 5){
+			return 10;
+		}
+		return 10 + level;
+	}
+	
 	@Override
 	public void reset(GameSprite playerSprite) {
 		player = playerSprite;

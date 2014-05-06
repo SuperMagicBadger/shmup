@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.graphics.GameSprite;
+import com.cowthegreat.shmup.graphics.PolyTools;
 import com.cowthegreat.shmup.graphics.TexturedCircle;
 import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
 
@@ -45,7 +46,7 @@ public class ShieldBroController extends EnemyController {
 	ArrayList<EnemyController> shieldList;
 
 	public static final float SHIELD_RADIUS = 200;
-	public static final float MOVE_SPEED = 100;
+	public static final float MOVE_SPEED = 150;
 	public static final float DODGE_SPEED = MOVE_SPEED * 4.5f;
 	public static final float STANDOFF_DISTANCE = 150;
 	public static final float STANDOFF_TOLERANCE = 50;
@@ -56,9 +57,19 @@ public class ShieldBroController extends EnemyController {
 		shieldList = new ArrayList<EnemyController>();
 		dead = false;
 		velocity = new Vector2();
-
-		hitbox = new Polygon(new float[] { -22, -22, 22, -22, 22, 22, -22, 22 });
-
+		
+		float[] points = new float[8];
+		points[6] = -22;
+		points[7] = -22;
+		points[4] = 22;
+		points[5] = -22;
+		points[2] = 22;
+		points[3] = 22;
+		points[0] = -22;
+		points[1] = 22;
+		
+		hitbox = new Polygon(points);
+		
 		shieldAura = new Circle();
 		shieldAura.radius = SHIELD_RADIUS;
 	}
@@ -146,7 +157,7 @@ public class ShieldBroController extends EnemyController {
 		Rectangle r = hitbox.getBoundingRectangle();
 		shapes.rect(r.x, r.y, r.width, r.height);
 		shapes.setColor(Color.GREEN);
-		shapes.polygon(hitbox.getTransformedVertices());
+		PolyTools.drawPolygon(shapes, hitbox);
 		shapes.setColor(Color.BLUE);
 		shapes.circle(shieldAura.x, shieldAura.y, shieldAura.radius);
 		shapes.setColor(c);

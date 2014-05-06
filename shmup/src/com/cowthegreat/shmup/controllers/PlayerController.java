@@ -330,6 +330,7 @@ public abstract class PlayerController implements UnitController {
 	// RESET TILT CONTROL
 
 	public abstract void reset();
+	public abstract void setAngle(float x, float y, float z);
 	public abstract void setMesage(Label l, Format f);
 
 }

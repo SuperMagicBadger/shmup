@@ -1,7 +1,10 @@
 package com.cowthegreat.shmup;
 
 import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
@@ -12,12 +15,21 @@ public class MainActivity extends AndroidApplication {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        
+        RelativeLayout layout = new RelativeLayout(this);
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         cfg.useGL20 = true;
+
+        View libgdxView = initializeForView(new SHMUP(new AndroidPlayerControler()), cfg);
         
-        initialize(new SHMUP(new AndroidPlayerControler2()), cfg);
+        layout.addView(libgdxView);
+        
+        setContentView(layout);
     }
     
 //    @Override

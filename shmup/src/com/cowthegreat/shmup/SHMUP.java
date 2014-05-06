@@ -37,6 +37,9 @@ public class SHMUP extends Game {
 	public float screenRatio;
 	private HashMap<String, Screen> screenMap;
 	
+	public static final float x45 = 0f, y45 = 0f, z45 = 0f;
+	public static final float x0 = 0f, y0 = 0f, z0 = 0f;
+	
 	public static ParticleEffectPool explosion_particles;
 	public static ParticleEffectPool dash_particles;
 	public static ParticleEffectPool gsplode_particles;

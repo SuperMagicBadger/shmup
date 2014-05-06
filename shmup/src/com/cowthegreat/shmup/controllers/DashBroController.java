@@ -12,11 +12,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.graphics.GameSprite;
+import com.cowthegreat.shmup.graphics.PolyTools;
 import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
 
 public class DashBroController extends EnemyController {
 	public enum State {
-		READY, TRACK, DASH, DOCK, RECOVER, WAIT
+		READY, TRACK, DASH, CHARGE, RECOVER, WAIT
 	}
 
 	private class DashEnder implements ParticleEffectListener {
@@ -28,7 +29,6 @@ public class DashBroController extends EnemyController {
 
 		@Override
 		public void effectFinished() {
-			setState(State.DASH);
 			efct.free();
 		}
 	}
@@ -47,16 +47,17 @@ public class DashBroController extends EnemyController {
 		}
 	}
 
-	private static final float TRACK_SPEED = 100;
+	public static final float TRACK_SPEED = 125;
+	public static final float DASH_CHARGE_TIMER = 0.55f;
 	public static final float DASH_DISTANCE = 300;
-	private static final float DASH_SPEED = 800;
-	private static final float DASH_DURATION = DASH_DISTANCE / DASH_SPEED;
-	private static final float RECOVER_SPEED = 50;
-	private static final float RECOVER_DISTANCE = 100;
-	private static final float RECOVER_DURATION = RECOVER_DISTANCE
+	public static final float DASH_SPEED = 825;
+	public static final float DASH_DURATION = DASH_DISTANCE / DASH_SPEED;
+	public static final float RECOVER_SPEED = 50;
+	public static final float RECOVER_DISTANCE = 100;
+	public static final float RECOVER_DURATION = RECOVER_DISTANCE
 			/ RECOVER_SPEED;
 	public static final float DASH_THRESHOLD = DASH_DISTANCE
-			* 0.5f;
+			* 0.65f;
 
 	private GameSprite unit;
 	private GameSprite center;
@@ -85,7 +86,17 @@ public class DashBroController extends EnemyController {
 		velocity = new Vector2();
 		targetVelocity = new Vector2();
 
-		hitbox = new Polygon(new float[] { -15, -15, 15, -15, 15, 15, -15, 15 });
+		float[] points = new float[8];
+		points[6] = -15;
+		points[7] = -15;
+		points[4] = 15;
+		points[5] = -15;
+		points[2] = 15;
+		points[3] = 15;
+		points[0] = -15;
+		points[1] = 15;
+		
+		hitbox = new Polygon(points);
 	}
 
 	@Override
@@ -94,6 +105,11 @@ public class DashBroController extends EnemyController {
 		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
 				"dash_bro_center"), Animation.LOOP_PINGPONG));
 		shield = new GameSprite(s.getRegion("dash_bro_shield"));
+		
+		unit.addChild(center);
+		unit.addChild(shield);
+		
+		
 		hitbox.setPosition(unit.getX() + unit.getOriginX(),
 				unit.getY() + unit.getOriginY());
 
@@ -125,6 +141,10 @@ public class DashBroController extends EnemyController {
 			destination.set(0, 0);
 			velocity.set(0, 0);
 			targetVelocity.set(0, 0);
+			unit.velocity.set(Vector2.Zero);
+			break;
+		case CHARGE:
+			dashTimer = 0;
 			unit.velocity.set(Vector2.Zero);
 			break;
 		case DASH:
@@ -160,6 +180,13 @@ public class DashBroController extends EnemyController {
 		case RECOVER:
 			updateRecover(delta);
 			break;
+		case CHARGE:
+			System.out.println("figgis");
+			dashTimer += delta;
+			if(dashTimer >= DASH_CHARGE_TIMER){
+				setState(State.DASH);
+			}
+			break;
 		case DASH:
 			updateDash(delta);
 			break;
@@ -177,10 +204,7 @@ public class DashBroController extends EnemyController {
 			break;
 		}
 		unit.update(delta);
-		center.setPosition(unit.getX(), unit.getY());
-		center.update(delta);
 		shield.setVisible(isInvulnerable());
-		shield.setPosition(unit.getX(), unit.getY());
 		hitbox.setPosition(unit.getX() + unit.getOriginX(),
 				unit.getY() + unit.getOriginY());
 	}
@@ -215,7 +239,7 @@ public class DashBroController extends EnemyController {
 		if (destination.dst(unit.getX(), unit.getY()) < DASH_THRESHOLD) {
 			PooledEffect dashGlow = SHMUP.dash_particles.obtain();
 			unit.addParticles(dashGlow, new DashEnder(dashGlow));
-			setState(State.WAIT);
+			setState(State.CHARGE);
 			return;
 		}
 
@@ -267,7 +291,7 @@ public class DashBroController extends EnemyController {
 		Rectangle r = hitbox.getBoundingRectangle();
 		shapes.rect(r.x, r.y, r.width, r.height);
 		shapes.setColor(hbCol);
-		shapes.polygon(hitbox.getTransformedVertices());
+		PolyTools.drawPolygon(shapes, hitbox);
 		shapes.setColor(Color.RED);
 		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(),
 				DASH_THRESHOLD);
@@ -281,12 +305,8 @@ public class DashBroController extends EnemyController {
 
 	@Override
 	public void draw(SpriteBatch batch) {
-		center.setPosition(unit.getX(), unit.getY());
-		shield.setPosition(unit.getX(), unit.getY());
-		center.draw(batch);
-		unit.draw(batch);
 		shield.setVisible(isInvulnerable());
-		shield.draw(batch);
+		unit.draw(batch);
 	}
 
 	public final int pointValue() {
