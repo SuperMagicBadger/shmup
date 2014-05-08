@@ -24,9 +24,11 @@ public class ShieldBroController extends EnemyController {
 
 	private class ExplosionEnder implements ParticleEffectListener {
 		private PooledEffect efct;
-		ExplosionEnder(PooledEffect efct){
+
+		ExplosionEnder(PooledEffect efct) {
 			this.efct = efct;
 		}
+
 		@Override
 		public void effectFinished() {
 			setDispose(true);
@@ -37,12 +39,14 @@ public class ShieldBroController extends EnemyController {
 	public GameSprite sprite;
 	public GameSprite shieldAnimation;
 	TextureRegion marker;
-	
+
+	float alpha;
+
 	Polygon hitbox;
 	public Circle shieldAura;
 	private boolean dead;
 	private Vector2 velocity;
-	
+
 	ArrayList<EnemyController> shieldList;
 
 	public static final float SHIELD_RADIUS = 200;
@@ -50,14 +54,14 @@ public class ShieldBroController extends EnemyController {
 	public static final float DODGE_SPEED = MOVE_SPEED * 4.5f;
 	public static final float STANDOFF_DISTANCE = 150;
 	public static final float STANDOFF_TOLERANCE = 50;
-	
+
 	public TexturedCircle tcircle = new TexturedCircle();
 
 	public ShieldBroController() {
 		shieldList = new ArrayList<EnemyController>();
 		dead = false;
 		velocity = new Vector2();
-		
+
 		float[] points = new float[8];
 		points[6] = -22;
 		points[7] = -22;
@@ -67,27 +71,32 @@ public class ShieldBroController extends EnemyController {
 		points[3] = 22;
 		points[0] = -22;
 		points[1] = 22;
-		
+
 		hitbox = new Polygon(points);
-		
+
 		shieldAura = new Circle();
 		shieldAura.radius = SHIELD_RADIUS;
 	}
-	
-	public void initialize(Skin s){
+
+	public void initialize(Skin s) {
 		sprite = new GameSprite(s.getRegion("shield_bro"));
-		shieldAnimation = new GameSprite(new Animation(0.2f, s.getAtlas().findRegions("shield_bro_shield_anim"), Animation.LOOP_PINGPONG));
+		shieldAnimation = new GameSprite(
+				new Animation(0.2f, s.getAtlas().findRegions(
+						"shield_bro_shield_anim"), Animation.LOOP_PINGPONG));
 		hitbox.setPosition(sprite.getX() + sprite.getOriginX(), sprite.getY()
 				+ sprite.getOriginY());
 		shieldAura.setPosition(sprite.getX() + sprite.getOriginX(),
 				sprite.getY() + sprite.getOriginY());
 		marker = s.getRegion("shield_bro_marker");
-		
+
 		tcircle.circle = shieldAura;
 		tcircle.count = 30;
 		tcircle.girth = shieldAura.radius;
 		tcircle.texRegion = s.getRegion("shield_bro_shield_radius");
 		tcircle.alhpa = 0.10f;
+
+		alpha = 0;
+		setInteractable(false);
 	}
 
 	@Override
@@ -97,33 +106,42 @@ public class ShieldBroController extends EnemyController {
 
 	@Override
 	public void update(float delta) {
-		if (tracked != null) {
-			// find destination, tempe'd in the velocity vector
-			velocity.set(sprite.getX(), sprite.getY());
-			velocity.sub(tracked.getX(), tracked.getY());
-			velocity.nor().scl(STANDOFF_DISTANCE);
-			velocity.add(tracked.getX(), tracked.getY());
-			float dist = velocity.dst(sprite.getX(), sprite.getY());
-
-			if (dist > STANDOFF_TOLERANCE) {
-				// find velocity
-				velocity.sub(sprite.getX(), sprite.getY());
-				velocity.nor().scl(MOVE_SPEED);
-				velocity.limit(MOVE_SPEED);
-			} else {
-				velocity.set(sprite.velocity);
-				velocity.nor().scl(4 * MOVE_SPEED);
-				velocity.set(Vector2.Zero);
+		if (alpha < 1) {
+			alpha += delta;
+			if (alpha > 1) {
+				alpha = 1;
 			}
 		} else {
-			velocity.set(Vector2.Zero);
+			setInteractable(true);
+			if (tracked != null) {
+				// find destination, tempe'd in the velocity vector
+				velocity.set(sprite.getX(), sprite.getY());
+				velocity.sub(tracked.getX(), tracked.getY());
+				velocity.nor().scl(STANDOFF_DISTANCE);
+				velocity.add(tracked.getX(), tracked.getY());
+				float dist = velocity.dst(sprite.getX(), sprite.getY());
+
+				if (dist > STANDOFF_TOLERANCE) {
+					// find velocity
+					velocity.sub(sprite.getX(), sprite.getY());
+					velocity.nor().scl(MOVE_SPEED);
+					velocity.limit(MOVE_SPEED);
+				} else {
+					velocity.set(sprite.velocity);
+					velocity.nor().scl(4 * MOVE_SPEED);
+					velocity.set(Vector2.Zero);
+				}
+			} else {
+				velocity.set(Vector2.Zero);
+			}
+			sprite.velocity.set(velocity);
+			sprite.update(delta);
+			shieldAnimation.update(delta);
+			shieldAnimation.setPosition(sprite.getX(), sprite.getY());
+			hitbox.setPosition(sprite.getOriginPosX(), sprite.getOriginPosY());
+			shieldAura.setPosition(sprite.getOriginPosX(),
+					sprite.getOriginPosY());
 		}
-		sprite.velocity.set(velocity);
-		sprite.update(delta);
-		shieldAnimation.update(delta);
-		shieldAnimation.setPosition(sprite.getX(), sprite.getY());
-		hitbox.setPosition(sprite.getOriginPosX(), sprite.getOriginPosY());
-		shieldAura.setPosition(sprite.getOriginPosX(), sprite.getOriginPosY());
 	}
 
 	@Override
@@ -173,30 +191,31 @@ public class ShieldBroController extends EnemyController {
 	}
 
 	public void applyShield(UnitController ect) {
-		if(isDead()) return;
+		if (isDead())
+			return;
 		if (!ect.isInvulnerable() && !ect.isDead()) {
 			if (Intersector.overlaps(shieldAura, ect.getHitBox()
 					.getBoundingRectangle())) {
-				((EnemyController)ect).applyShield();
+				((EnemyController) ect).applyShield();
 			}
 		}
 	}
-	
+
 	@Override
-	public void applyShield() {	
+	public void applyShield() {
 	}
 
 	@Override
-	public void draw(SpriteBatch batch){
-		sprite.draw(batch);
-		shieldAnimation.draw(batch);
+	public void draw(SpriteBatch batch) {
+		sprite.draw(batch, alpha);
+		shieldAnimation.draw(batch, alpha);
 	}
-	
+
 	@Override
 	public TextureRegion radarMarker() {
 		return marker;
 	}
-	
+
 	@Override
 	public boolean isSeperable() {
 		return false;

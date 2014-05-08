@@ -147,6 +147,29 @@ public class GameSprite extends Sprite {
 			gs.move(-getX(), -getY());
 		}
 		super.draw(spriteBatch);
+	} 
+
+	@Override
+	public void draw(SpriteBatch spriteBatch, float alphaModulation) {
+		if(!visible){
+			return;
+		}
+		for(int i = 0; i < emitterList.size(); i++) {
+			emitterList.get(i).draw(spriteBatch);
+		}
+		for(GameSprite gs : children){
+			gs.move(getX(), getY());
+			float rot = gs.getRotation();
+			float sx = gs.getScaleX();
+			float sy = gs.getScaleY();
+			gs.setRotation(getRotation());
+			gs.setScale(getScaleX(), getScaleY());
+			gs.draw(spriteBatch, alphaModulation);
+			gs.setRotation(rot);
+			gs.setScale(sx, sy);
+			gs.move(-getX(), -getY());
+		}
+		super.draw(spriteBatch, alphaModulation);
 	}
 
 	public float getOriginPosX() {

@@ -11,7 +11,7 @@ import com.cowthegreat.shmup.controllers.PlayerController;
 public class AndroidPlayerControler extends PlayerController {
 
 	Vector3 zeroTilt = null;
-	public float deadZone = 0.15f;
+	public float deadZone = 0.2f;
 	private float runningX, runningY, runningZ;
 	Vector3 v3 = new Vector3();
 	Vector3 vax = new Vector3();
@@ -50,6 +50,7 @@ public class AndroidPlayerControler extends PlayerController {
 
 	@Override
 	public void reset() {
+		System.out.println("reseting tilt");
 		if(zeroTilt == null){
 			zeroTilt = new Vector3();
 		}
@@ -70,6 +71,13 @@ public class AndroidPlayerControler extends PlayerController {
 			zeroTilt = new Vector3();
 		}
 		zeroTilt.set(x, y, z);
+		zeroTilt.nor();
+		
+		vax = new Vector3(1, 0, 0).nor();
+		vaz = new Vector3(zeroTilt);
+		
+		vaz.crs(vax).nor();
+		vax.set(vaz).crs(zeroTilt).nor();
 	};
 
 	private float getSmoothedX() {

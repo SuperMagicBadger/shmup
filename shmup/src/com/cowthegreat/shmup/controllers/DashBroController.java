@@ -56,8 +56,7 @@ public class DashBroController extends EnemyController {
 	public static final float RECOVER_DISTANCE = 100;
 	public static final float RECOVER_DURATION = RECOVER_DISTANCE
 			/ RECOVER_SPEED;
-	public static final float DASH_THRESHOLD = DASH_DISTANCE
-			* 0.65f;
+	public static final float DASH_THRESHOLD = DASH_DISTANCE * 0.65f;
 
 	private GameSprite unit;
 	private GameSprite center;
@@ -66,6 +65,8 @@ public class DashBroController extends EnemyController {
 	public State currentState;
 	float dashTimer;
 	boolean dead;
+
+	float alpha;
 
 	Vector2 position;
 	Vector2 destination;
@@ -95,7 +96,7 @@ public class DashBroController extends EnemyController {
 		points[3] = 15;
 		points[0] = -15;
 		points[1] = 15;
-		
+
 		hitbox = new Polygon(points);
 	}
 
@@ -105,11 +106,10 @@ public class DashBroController extends EnemyController {
 		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
 				"dash_bro_center"), Animation.LOOP_PINGPONG));
 		shield = new GameSprite(s.getRegion("dash_bro_shield"));
-		
+
 		unit.addChild(center);
 		unit.addChild(shield);
-		
-		
+
 		hitbox.setPosition(unit.getX() + unit.getOriginX(),
 				unit.getY() + unit.getOriginY());
 
@@ -176,37 +176,44 @@ public class DashBroController extends EnemyController {
 	}
 
 	public void update(float delta) {
-		switch (currentState) {
-		case RECOVER:
-			updateRecover(delta);
-			break;
-		case CHARGE:
-			System.out.println("figgis");
-			dashTimer += delta;
-			if(dashTimer >= DASH_CHARGE_TIMER){
-				setState(State.DASH);
+		if (alpha < 1) {
+			alpha += delta;
+			if (alpha > 1) {
+				alpha = 1;
 			}
-			break;
-		case DASH:
-			updateDash(delta);
-			break;
-		case TRACK:
-			updateTrack(delta);
-			break;
-		case READY:
-			if (tracked != null) {
-				setState(State.TRACK);
+		} else {
+			setInteractable(true);
+			switch (currentState) {
+			case RECOVER:
+				updateRecover(delta);
+				break;
+			case CHARGE:
+				dashTimer += delta;
+				if (dashTimer >= DASH_CHARGE_TIMER) {
+					setState(State.DASH);
+				}
+				break;
+			case DASH:
+				updateDash(delta);
+				break;
+			case TRACK:
+				updateTrack(delta);
+				break;
+			case READY:
+				if (tracked != null) {
+					setState(State.TRACK);
+				}
+				break;
+			case WAIT:
+				break;
+			default:
+				break;
 			}
-			break;
-		case WAIT:
-			break;
-		default:
-			break;
+			unit.update(delta);
+			shield.setVisible(isInvulnerable());
+			hitbox.setPosition(unit.getX() + unit.getOriginX(), unit.getY()
+					+ unit.getOriginY());
 		}
-		unit.update(delta);
-		shield.setVisible(isInvulnerable());
-		hitbox.setPosition(unit.getX() + unit.getOriginX(),
-				unit.getY() + unit.getOriginY());
 	}
 
 	private void updateRecover(float delta) {
@@ -306,7 +313,7 @@ public class DashBroController extends EnemyController {
 	@Override
 	public void draw(SpriteBatch batch) {
 		shield.setVisible(isInvulnerable());
-		unit.draw(batch);
+		unit.draw(batch, alpha);
 	}
 
 	public final int pointValue() {
@@ -328,7 +335,7 @@ public class DashBroController extends EnemyController {
 			return marker;
 		}
 	}
-	
+
 	@Override
 	public boolean isSeperable() {
 		return true;

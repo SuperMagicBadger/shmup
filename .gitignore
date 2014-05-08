@@ -1,4 +1,12 @@
 #################
+## Keys and Misc.
+#################
+
+*.keystore
+*.keystore_recovered
+*.lnk
+
+#################
 ## Eclipse
 #################
 

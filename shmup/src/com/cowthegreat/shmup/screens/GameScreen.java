@@ -51,7 +51,7 @@ public class GameScreen implements Screen {
 	boolean isGameOver = true;
 
 	private Stage stage;
-	private Label fpsLabel, scoreLabel;//, acceleromiterLabel;
+	private Label fpsLabel, scoreLabel, acceleromiterLabel;
 
 	private Radar radar;
 
@@ -87,8 +87,8 @@ public class GameScreen implements Screen {
 		scoreLabel.setPosition(stage.getWidth() - scoreLabel.getWidth(),
 				stage.getHeight() - scoreLabel.getHeight());
 		
-//		acceleromiterLabel = new Label("", game.skn, "font_20", Color.WHITE);
-//		acceleromiterLabel.setPosition(0, 50);
+		acceleromiterLabel = new Label("", game.skn, "font_20", Color.WHITE);
+		acceleromiterLabel.setPosition(0, 50);
 
 		// SET UP GAME OVER WIDGET
 		goa = new GameOverActor(game);
@@ -133,7 +133,7 @@ public class GameScreen implements Screen {
 
 		stage.addActor(fpsLabel);
 		stage.addActor(scoreLabel);
-//		stage.addActor(acceleromiterLabel);
+		stage.addActor(acceleromiterLabel);
 		stage.addActor(goa);
 
 		radar = new Radar(game);
@@ -189,9 +189,9 @@ public class GameScreen implements Screen {
 
 		// UI RENDERING
 		fpsLabel.setText("" + Gdx.graphics.getFramesPerSecond());
-//		playerContrller.setMesage(acceleromiterLabel, format);
-//		acceleromiterLabel.pack();
-//		acceleromiterLabel.setPosition(50, 50);
+		playerContrller.setMesage(acceleromiterLabel, format);
+		acceleromiterLabel.pack();
+		acceleromiterLabel.setPosition(50, 50);
 		scoreLabel.setText("Wave " + gm.getLevel() + " Score: "
 				+ game.score.currentKills);
 		scoreLabel.pack();

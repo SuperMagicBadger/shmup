@@ -27,7 +27,7 @@ public class ContinousRoundMap implements GameMap {
 
 	public float WIDTH;
 	public float HEIGHT;
-	public float SPAWN_RADIUS = 750;
+	public float SPAWN_RADIUS = 500;
 	public int INITIAL_ENEMIES = 10;
 	public int MAX_ENEMIES = 30;
 	public int MAXED_LEVEL = 5;
@@ -52,7 +52,10 @@ public class ContinousRoundMap implements GameMap {
 	private Spawner specialSpawner;
 
 	Rectangle bounds;
-
+	
+	// ====================================================
+	// CONSTRUCTOR ----------------------------------------
+	// ====================================================
 	public ContinousRoundMap(SHMUP shmup) {
 		this.game = shmup;
 
@@ -173,7 +176,6 @@ public class ContinousRoundMap implements GameMap {
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
-
 		activeUnits.add(ctrl);
 	}
 	
@@ -270,8 +272,9 @@ public class ContinousRoundMap implements GameMap {
 
 	@Override
 	public boolean testCollisions(PlayerController player) {
+		// TODO ffs, make use of qt instead of brute forcing it
 		for (int i = 0; i < activeUnits.size(); i++) {
-			if (!activeUnits.get(i).isDead()) {
+			if (!activeUnits.get(i).isDead() && activeUnits.get(i).isInteractable()) {
 				if (player.collidesWith(activeUnits.get(i))) {
 					if (!player.isDashing) {
 						player.damage(1);

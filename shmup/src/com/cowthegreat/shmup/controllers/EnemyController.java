@@ -4,24 +4,22 @@ package com.cowthegreat.shmup.controllers;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.graphics.GameSprite;
-import com.cowthegreat.shmup.level.RoundMap;
 
 public abstract class EnemyController implements UnitController{
 	
-	protected RoundMap spawner;
+	public static interface EnemyBehavior{
+		public void setEnemy(EnemyController ec);
+		public void update(float delta);
+	}
+	
 	protected GameSprite tracked;
 	
+	private float alpha;
+	
+	private boolean interactable = false;
 	private boolean invulnerable = false;
 	private boolean dispose = false;
-	
-	public void onSpawn(RoundMap parent){
-		spawner = parent;
-	}
-	
-	public void onDeSpawn(){
-		spawner = null;
-	}
-	
+
 	@Override
 	public void setInvulnerable(boolean set){
 		invulnerable = set;
@@ -36,6 +34,14 @@ public abstract class EnemyController implements UnitController{
 		tracked = gs;
 	}
 	
+	public void setInteractable(boolean set){
+		interactable = set;
+	}
+	
+	public boolean isInteractable(){
+		return interactable;
+	}
+	
 	public GameSprite getTracked(){
 		return tracked;
 	}
@@ -47,7 +53,15 @@ public abstract class EnemyController implements UnitController{
 	public boolean isDispose(){
 		return dispose;
 	}
-
+	
+	public void setAlpha(float set){
+		alpha = set;
+	}
+	
+	public float getAlpha(){
+		return alpha;
+	}
+	
 	public abstract int pointValue();
 	public abstract void applyShield();
 	public abstract void initialize(Skin s);

@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -44,6 +43,8 @@ public class MainMenuScreen implements Screen {
 	Table highScoreTable;
 	Table newGameTable;
 
+	long themeID = -1;
+	
 	boolean drawDebug = false;
 	Array<Table> dt = new Array<Table>();
 
@@ -333,7 +334,7 @@ public class MainMenuScreen implements Screen {
 	@Override
 	public void show() {
 		resetHighScores();
-
+		
 		// show main table
 		mainTable.setPosition(
 				uiStage.getWidth() / 2 - mainTable.getWidth() / 2,
@@ -345,11 +346,14 @@ public class MainMenuScreen implements Screen {
 		highScoreTable.setVisible(false);
 		newGameTable.setVisible(false);
 
+		themeID = SHMUP.theme.loop();
+		
 		Gdx.input.setInputProcessor(uiStage);
 	}
 
 	@Override
 	public void hide() {
+		SHMUP.theme.stop(themeID);
 	}
 
 	@Override
@@ -480,14 +484,14 @@ public class MainMenuScreen implements Screen {
 		angleButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				game.playerControls.reset();
+				game.playerControls.setAngle(SHMUP.x45, SHMUP.y45, SHMUP.z45);
 				newGame();
 			}
 		});
 		flatButton.addListener(new ClickListener(){
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
-				game.playerControls.reset();
+				game.playerControls.setAngle(SHMUP.x0, SHMUP.y0, SHMUP.z0);
 				newGame();
 			}
 		});

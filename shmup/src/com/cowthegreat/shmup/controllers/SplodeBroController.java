@@ -1,6 +1,5 @@
 package com.cowthegreat.shmup.controllers;
 
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
@@ -66,10 +65,12 @@ public class SplodeBroController extends EnemyController {
 	Polygon hitbox;
 	State state;
 	boolean dead;
-	
+
+	float alpha;
+
 	Circle explodeCircle;
 	Vector2 velocity;
-	
+
 	public TexturedCircle circle;
 
 	public SplodeBroController() {
@@ -83,18 +84,22 @@ public class SplodeBroController extends EnemyController {
 	@Override
 	public void initialize(Skin s) {
 		unit = new GameSprite(s.getRegion("sploode_bro"));
-		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions("splode_bro_center"), Animation.LOOP_PINGPONG));
+		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
+				"splode_bro_center"), Animation.LOOP_PINGPONG));
 		hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
 		explodeCircle.setPosition(unit.getX(), unit.getY());
 		marker = s.getRegion("splode_bro_marker");
 		splodeMarker = s.getRegion("marker");
-		
+
 		circle = new TexturedCircle();
 		circle.texRegion = s.getRegion("splode_bro_splode_radius");
 		circle.circle = explodeCircle;
 		circle.girth = explodeCircle.radius;
 		circle.count = 30;
 		circle.alhpa = 0.10f;
+
+		alpha = 0;
+		setInteractable(false);
 	}
 
 	@Override
@@ -114,7 +119,8 @@ public class SplodeBroController extends EnemyController {
 		shapes.polygon(hitbox.getTransformedVertices());
 		shapes.setColor(Color.RED);
 		shapes.circle(explodeCircle.x, explodeCircle.y, explodeCircle.radius);
-		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(), EXPLODE_TRIGER_RADIUS);
+		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(),
+				EXPLODE_TRIGER_RADIUS);
 		shapes.setColor(c);
 	}
 
@@ -170,37 +176,48 @@ public class SplodeBroController extends EnemyController {
 	}
 
 	public void update(float delta) {
-		switch (state) {
-		case CHARGE:
-			unit.velocity.set(Vector2.Zero);
-			break;
-		case EXPLODE:
-			setState(State.WAIT);
-			setInvulnerable(true);
-			break;
-		case TRACK:
-			updateTrack(delta);
-			break;
-		case WAIT:
-			if (getTracked() != null) {
-				setState(State.TRACK);
+		if (alpha < 1) {
+			alpha += delta;
+			if (alpha > 1) {
+				alpha = 1;
 			}
-			break;
-		case DEAD:
-			break;
-		default:
-			break;
+		} else {
+			setInteractable(true);
+			switch (state) {
+
+			case CHARGE:
+				unit.velocity.set(Vector2.Zero);
+				break;
+			case EXPLODE:
+				setState(State.WAIT);
+				setInvulnerable(true);
+				break;
+			case TRACK:
+				updateTrack(delta);
+				break;
+			case WAIT:
+				if (getTracked() != null) {
+					setState(State.TRACK);
+				}
+				break;
+			case DEAD:
+				break;
+			default:
+				break;
+			}
+			unit.update(delta);
+			center.update(delta);
+			center.setPosition(unit.getX(), unit.getY());
+			hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
+			explodeCircle.setPosition(unit.getOriginPosX(),
+					unit.getOriginPosY());
 		}
-		unit.update(delta);
-		center.update(delta);
-		center.setPosition(unit.getX(), unit.getY());
-		hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
-		explodeCircle.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
 	}
 
 	public void updateTrack(float delta) {
 		if (!isDead()) {
-			velocity.set(getTracked().getOriginPosX(), getTracked().getOriginPosY());
+			velocity.set(getTracked().getOriginPosX(), getTracked()
+					.getOriginPosY());
 			velocity.sub(unit.getOriginPosX(), unit.getOriginPosY());
 
 			if (velocity.len2() < EXPLODE_TRIGER_RADIUS * EXPLODE_TRIGER_RADIUS) {
@@ -215,8 +232,8 @@ public class SplodeBroController extends EnemyController {
 
 	@Override
 	public void draw(SpriteBatch batch) {
-		center.draw(batch);
-		unit.draw(batch);
+		center.draw(batch, alpha);
+		unit.draw(batch, alpha);
 	}
 
 	@Override
@@ -233,7 +250,8 @@ public class SplodeBroController extends EnemyController {
 				for (int i = 0; i < xy.length - 1; i += 2) {
 					if (explodeCircle.contains(xy[i], xy[i + 1])) {
 						unit.damage(10);
-						if(unit.isDead() && !(unit instanceof PlayerController)){
+						if (unit.isDead()
+								&& !(unit instanceof PlayerController)) {
 							board.currentKills++;
 						}
 						return true;
@@ -243,14 +261,14 @@ public class SplodeBroController extends EnemyController {
 		}
 		return false;
 	}
-	
+
 	@Override
-	public void applyShield() {	
+	public void applyShield() {
 	}
-	
+
 	@Override
 	public TextureRegion radarMarker() {
-		if(state == State.CHARGE || state == State.EXPLODE){
+		if (state == State.CHARGE || state == State.EXPLODE) {
 			return splodeMarker;
 		}
 		return marker;

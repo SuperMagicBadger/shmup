@@ -13,46 +13,47 @@ import com.cowthegreat.shmup.graphics.PolyTools;
 
 public class IdiotBroController extends EnemyController {
 
-	private class ExplodeEnder implements ParticleEffectListener{
+	private class ExplodeEnder implements ParticleEffectListener {
 		@Override
 		public void effectFinished() {
 			setDispose(true);
 		}
 	}
-	
+
 	public static final float IDIOT_BRO_SPEED = 75;
 	public static final float ROTATION_RATE = 360;
 	private static TextureRegion marker;
-	
+
 	Polygon hitbox;
 	GameSprite body;
 	GameSprite shield;
 	boolean dead;
-	
+
+	public float alpha = 1;
+
 	@Override
 	public void initialize(Skin s) {
 		body = new GameSprite(s.getRegion("bro"));
 		body.setRotation(SHMUP.rng.nextFloat() * 360);
 		body.setScale(1.5f);
-		
+
 		shield = new GameSprite(s.getRegion("bro_shield"));
 		body.addChild(shield);
-		
-		float[] points = new float[]{
-				0, body.getHeight(),
-				body.getWidth(), body.getHeight(),
-				body.getWidth(), 0,
-				0, 0
-		};
-		
+
+		float[] points = new float[] { 0, body.getHeight(), body.getWidth(),
+				body.getHeight(), body.getWidth(), 0, 0, 0 };
+
 		hitbox = new Polygon(points);
 		hitbox.setOrigin(body.getHeight() / 2, body.getWidth() / 2);
 		hitbox.setScale(1.5f, 1.5f);
 		dead = false;
-		
+
+		alpha = 0;
+		setInteractable(false);
+
 		marker = s.getRegion("bro_marker");
 	}
-	
+
 	@Override
 	public GameSprite getControlled() {
 		return body;
@@ -70,9 +71,9 @@ public class IdiotBroController extends EnemyController {
 
 	@Override
 	public void damage(int dam) {
-		if(!isInvulnerable() && !isDead()){
+		if (!isInvulnerable() && !isDead()) {
 			dead = true;
-			if(isDead()){
+			if (isDead()) {
 				onDeath();
 			}
 		}
@@ -85,39 +86,46 @@ public class IdiotBroController extends EnemyController {
 
 	@Override
 	public void onDeath() {
-		body.addParticles(SHMUP.explosion_particles.obtain(), new ExplodeEnder());
+		body.addParticles(SHMUP.explosion_particles.obtain(),
+				new ExplodeEnder());
 		SHMUP.explosion.play();
 	}
 
 	@Override
 	public void update(float delta) {
-		Vector2 vel = SHMUP.vector_pool.obtain();
-		vel.set(getTracked().getOriginPosX(), 
-				getTracked().getOriginPosY());
-		vel.sub(body.getOriginPosX(), 
-				body.getOriginPosY());
-		vel.nor();
-
-		if(!isDead()){
-			vel.scl(IDIOT_BRO_SPEED * delta);
+		if (alpha < 1) {
+			alpha += delta;
+			if (alpha > 1) {
+				alpha = 1;
+			}
 		} else {
-			vel.scl(IDIOT_BRO_SPEED * -2 *  delta);
+			setInteractable(true);
+			Vector2 vel = SHMUP.vector_pool.obtain();
+			vel.set(getTracked().getOriginPosX(), getTracked().getOriginPosY());
+			vel.sub(body.getOriginPosX(), body.getOriginPosY());
+			vel.nor();
+
+			if (!isDead()) {
+				vel.scl(IDIOT_BRO_SPEED * delta);
+			} else {
+				vel.scl(IDIOT_BRO_SPEED * -2 * delta);
+			}
+			body.move(vel);
+			body.rotate(ROTATION_RATE * delta);
+			SHMUP.vector_pool.free(vel);
+
+			body.update(delta);
+			hitbox.setPosition(body.getX(), body.getY());
 		}
-		body.move(vel);
-		body.rotate(ROTATION_RATE * delta);
-		SHMUP.vector_pool.free(vel);
-		
-		body.update(delta);
-		hitbox.setPosition(body.getX(), body.getY());
 	}
 
 	@Override
 	public void draw(SpriteBatch batch) {
 		hitbox.setPosition(body.getX(), body.getY());
 		shield.setVisible(isInvulnerable());
-		body.draw(batch);
+		body.draw(batch, alpha);
 	}
-	
+
 	@Override
 	public void applyShield() {
 		setInvulnerable(true);
@@ -132,7 +140,7 @@ public class IdiotBroController extends EnemyController {
 	public TextureRegion radarMarker() {
 		return marker;
 	}
-	
+
 	@Override
 	public boolean isSeperable() {
 		return false;
