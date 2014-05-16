@@ -277,6 +277,8 @@ public abstract class PlayerController implements UnitController {
 			return;
 		}
 		Color c = shapes.getColor();
+		
+		// draw hitbox
 		if (hitbox == null) {
 			Rectangle r = player.getBoundingRectangle();
 			shapes.setColor(Color.RED);
@@ -288,13 +290,18 @@ public abstract class PlayerController implements UnitController {
 			shapes.setColor(Color.RED);
 			shapes.rect(r.x, r.y, r.width, r.height);
 		}
+		
+		// draw center of player
 		shapes.setColor(Color.ORANGE);
 		shapes.circle(player.getOriginPosX(), player.getOriginPosY(), 5);
+		
+		//draw player velocity
 		shapes.setColor(Color.WHITE);
 		shapes.line(player.getOriginPosX(), player.getOriginPosY(),
 				player.velocity.x / 3 + player.getOriginPosX(),
 				player.velocity.y / 3 + player.getOriginPosY());
 		
+		// draw the hitbox normals
 		float[] p = hitbox.getTransformedVertices();
 		
 		for(int i = 0; i < p.length; i+=2){
@@ -315,6 +322,16 @@ public abstract class PlayerController implements UnitController {
 			SHMUP.vector_pool.free(nor);
 			SHMUP.vector_pool.free(midpt);
 		}
+		
+		//draw facing line
+		shapes.setColor(Color.BLUE);
+		Vector2 facing = SHMUP.vector_pool.obtain();
+		facing.set(50, 0);
+		facing.rotate(player.getRotation());
+		facing.add(player.getOriginPosX(), player.getOriginPosY());
+		shapes.line(player.getOriginPosX(), player.getOriginPosY(), facing.x, facing.y);
+		SHMUP.vector_pool.free(facing);
+		
 		shapes.setColor(c);
 	}
 

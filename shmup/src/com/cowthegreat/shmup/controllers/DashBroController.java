@@ -11,6 +11,11 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
+import com.cowthegreat.shmup.behaviors.AlphaBehavior;
+import com.cowthegreat.shmup.behaviors.Behavior;
+import com.cowthegreat.shmup.behaviors.ChaseBehavior;
+import com.cowthegreat.shmup.behaviors.ExplodeBehavior;
+import com.cowthegreat.shmup.behaviors.MoveBehavior;
 import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.PolyTools;
 import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
@@ -75,8 +80,14 @@ public class DashBroController extends EnemyController {
 	Vector2 targetVelocity;
 
 	TextureRegion marker, dashMarker;
+	
+	AlphaBehavior ab;
+	ChaseBehavior cb;
+	MoveBehavior mb;
+	ExplodeBehavior eb;
+	Behavior activeBehavior;
 
-	public DashBroController() {
+	public DashBroController(Skin s) {
 		currentState = State.READY;
 
 		dead = false;
@@ -98,11 +109,9 @@ public class DashBroController extends EnemyController {
 		points[1] = 15;
 
 		hitbox = new Polygon(points);
-	}
-
-	@Override
-	public void initialize(Skin s) {
 		unit = new GameSprite(s.getRegion("dash_bro"));
+		
+		
 		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
 				"dash_bro_center"), Animation.LOOP_PINGPONG));
 		shield = new GameSprite(s.getRegion("dash_bro_shield"));
@@ -115,6 +124,33 @@ public class DashBroController extends EnemyController {
 
 		marker = s.getRegion("dash_bro_marker");
 		dashMarker = s.getRegion("marker");
+		
+		ab = new AlphaBehavior();
+		ab.setController(this);
+		ab.setDuration(1);
+		
+		cb = new ChaseBehavior();
+		cb.setController(this);
+		cb.setSpeed(TRACK_SPEED);
+		
+		mb = new MoveBehavior();
+		mb.setController(this);
+		mb.setDuration(DASH_DURATION);
+		mb.setSpeed(DASH_SPEED);
+		
+		eb = new ExplodeBehavior();
+		eb.setController(this);
+		eb.setSpeed(TRACK_SPEED * 2);
+	}
+
+	@Override
+	public void initialize(Skin s) {
+		setInteractable(false);
+		setDispose(false);
+		alpha = 0;
+		
+		ab.reset();
+		activeBehavior = ab;
 	}
 
 	public void setControlled(GameSprite object) {

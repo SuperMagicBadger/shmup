@@ -73,21 +73,15 @@ public class SplodeBroController extends EnemyController {
 
 	public TexturedCircle circle;
 
-	public SplodeBroController() {
+	public SplodeBroController(Skin s) {
 		velocity = new Vector2();
 		hitbox = new Polygon(new float[] { -20, 20, -20, -20, 20, -20, 20, 20 });
 
 		explodeCircle = new Circle(0, 0, EXPLODE_RADIUS);
 		setState(State.WAIT);
-	}
-
-	@Override
-	public void initialize(Skin s) {
 		unit = new GameSprite(s.getRegion("sploode_bro"));
 		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
 				"splode_bro_center"), Animation.LOOP_PINGPONG));
-		hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
-		explodeCircle.setPosition(unit.getX(), unit.getY());
 		marker = s.getRegion("splode_bro_marker");
 		splodeMarker = s.getRegion("marker");
 
@@ -99,7 +93,12 @@ public class SplodeBroController extends EnemyController {
 		circle.alhpa = 0.10f;
 
 		alpha = 0;
+	}
+
+	@Override
+	public void initialize(Skin s) {
 		setInteractable(false);
+		setDispose(false);
 	}
 
 	@Override

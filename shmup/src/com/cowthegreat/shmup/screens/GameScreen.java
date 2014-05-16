@@ -12,8 +12,10 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -21,6 +23,7 @@ import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.controllers.PlayerController;
 import com.cowthegreat.shmup.graphics.GameOverActor;
 import com.cowthegreat.shmup.graphics.GameOverActor.Listener;
+import com.cowthegreat.shmup.graphics.AuraMesh;
 import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.ParallaxBackground;
 import com.cowthegreat.shmup.graphics.ParallaxCamera;
@@ -35,6 +38,7 @@ public class GameScreen implements Screen {
 
 	private ParallaxCamera camera;
 	private SpriteBatch batch;
+	private SpriteBatch unitBatch;
 	private ShapeRenderer shapes;
 	private ImmediateModeRenderer immediate;
 	private DecimalFormat format;
@@ -50,6 +54,8 @@ public class GameScreen implements Screen {
 	boolean isPaused = false;
 	boolean isGameOver = true;
 
+	private ShaderProgram prgm;
+	
 	private Stage stage;
 	private Label fpsLabel, scoreLabel, acceleromiterLabel;
 
@@ -60,6 +66,7 @@ public class GameScreen implements Screen {
 		playerContrller = game.playerControls;
 		playerContrller.setGame(shmupGame);
 		batch = new SpriteBatch();
+		unitBatch = new SpriteBatch();
 		shapes = new ShapeRenderer();
 		immediate = new ImmediateModeRenderer20(false, true, 1);
 		camera = new ParallaxCamera(game.gameWidth, game.gameHeight);
@@ -138,17 +145,25 @@ public class GameScreen implements Screen {
 
 		radar = new Radar(game);
 		
+		ShaderProgram.pedantic = false;
+		prgm = new ShaderProgram(Gdx.files.internal("shaders/passthrough.vsh"), Gdx.files.internal("shaders/passthrough.fsh"));
+		System.out.println(prgm.isCompiled() ? "shader working" : prgm.getLog());
+		unitBatch.setShader(prgm);
+		
+		mesh = new AuraMesh(shmupGame);
 	}
 
 	// ==============================================================
 	// RENDERING ----------------------------------------------------
 	// ==============================================================
+	AuraMesh mesh;
 	@Override
 	public void render(float delta) {
 		// SCREEN UPDATE
 		Gdx.gl.glClearColor(0f, 0f, 0f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+		
 		// GAME UPDATE
 		if (!isPaused) {
 			gm.update(delta);
@@ -156,12 +171,15 @@ public class GameScreen implements Screen {
 			camera.update();
 		}
 
+		
 		// BG
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		camera.bg.draw(batch);
-		gm.draw(batch);
+		radar.draw(batch, camera, gm.getActiveUnits());
 		batch.end();
+
+		mesh.draw(camera.combined, new Circle(0f, 0f, 250f), Color.RED);
 		
 		// IMMEDIATES
 		Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -169,12 +187,11 @@ public class GameScreen implements Screen {
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 		
 		// SPRITE RENDERING
-		batch.setProjectionMatrix(camera.combined);
-		batch.begin();
-		gm.draw(batch);
-		playerContrller.draw(batch);
-		radar.draw(batch, camera, gm.getActiveUnits());
-		batch.end();
+		unitBatch.setProjectionMatrix(camera.combined);
+		unitBatch.begin();
+		gm.draw(unitBatch);
+		playerContrller.draw(unitBatch);
+		unitBatch.end();
 
 		// HITBOX RENDERING
 		if (game.settings.drawHitboxes) {
@@ -186,12 +203,12 @@ public class GameScreen implements Screen {
 			shapes.end();
 			
 		}
-
+		
 		// UI RENDERING
 		fpsLabel.setText("" + Gdx.graphics.getFramesPerSecond());
-		playerContrller.setMesage(acceleromiterLabel, format);
-		acceleromiterLabel.pack();
-		acceleromiterLabel.setPosition(50, 50);
+//		playerContrller.setMesage(acceleromiterLabel, format);
+//		acceleromiterLabel.pack();
+//		acceleromiterLabel.setPosition(50, 50);
 		scoreLabel.setText("Wave " + gm.getLevel() + " Score: "
 				+ game.score.currentKills);
 		scoreLabel.pack();

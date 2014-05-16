@@ -57,7 +57,7 @@ public class ShieldBroController extends EnemyController {
 
 	public TexturedCircle tcircle = new TexturedCircle();
 
-	public ShieldBroController() {
+	public ShieldBroController(Skin s) {
 		shieldList = new ArrayList<EnemyController>();
 		dead = false;
 		velocity = new Vector2();
@@ -76,17 +76,11 @@ public class ShieldBroController extends EnemyController {
 
 		shieldAura = new Circle();
 		shieldAura.radius = SHIELD_RADIUS;
-	}
 
-	public void initialize(Skin s) {
 		sprite = new GameSprite(s.getRegion("shield_bro"));
 		shieldAnimation = new GameSprite(
 				new Animation(0.2f, s.getAtlas().findRegions(
 						"shield_bro_shield_anim"), Animation.LOOP_PINGPONG));
-		hitbox.setPosition(sprite.getX() + sprite.getOriginX(), sprite.getY()
-				+ sprite.getOriginY());
-		shieldAura.setPosition(sprite.getX() + sprite.getOriginX(),
-				sprite.getY() + sprite.getOriginY());
 		marker = s.getRegion("shield_bro_marker");
 
 		tcircle.circle = shieldAura;
@@ -94,9 +88,12 @@ public class ShieldBroController extends EnemyController {
 		tcircle.girth = shieldAura.radius;
 		tcircle.texRegion = s.getRegion("shield_bro_shield_radius");
 		tcircle.alhpa = 0.10f;
+	}
 
+	public void initialize(Skin s) {
 		alpha = 0;
 		setInteractable(false);
+		setDispose(false);
 	}
 
 	@Override
@@ -137,11 +134,13 @@ public class ShieldBroController extends EnemyController {
 			sprite.velocity.set(velocity);
 			sprite.update(delta);
 			shieldAnimation.update(delta);
-			shieldAnimation.setPosition(sprite.getX(), sprite.getY());
-			hitbox.setPosition(sprite.getOriginPosX(), sprite.getOriginPosY());
-			shieldAura.setPosition(sprite.getOriginPosX(),
-					sprite.getOriginPosY());
+
 		}
+		shieldAnimation.setPosition(sprite.getX(), sprite.getY());
+		hitbox.setPosition(sprite.getX() + sprite.getOriginX(), sprite.getY()
+				+ sprite.getOriginY());
+		shieldAura.setPosition(sprite.getX() + sprite.getOriginX(),
+				sprite.getY() + sprite.getOriginY());
 	}
 
 	@Override

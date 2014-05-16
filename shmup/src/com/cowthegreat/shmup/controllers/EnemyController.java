@@ -7,11 +7,6 @@ import com.cowthegreat.shmup.graphics.GameSprite;
 
 public abstract class EnemyController implements UnitController{
 	
-	public static interface EnemyBehavior{
-		public void setEnemy(EnemyController ec);
-		public void update(float delta);
-	}
-	
 	protected GameSprite tracked;
 	
 	private float alpha;

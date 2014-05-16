@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Pool;
+import com.cowthegreat.shmup.controllers.EnemyControllerFactory;
 import com.cowthegreat.shmup.controllers.PlayerController;
 import com.cowthegreat.shmup.screens.GameScreen;
 import com.cowthegreat.shmup.screens.MainMenuScreen;
@@ -28,13 +29,13 @@ public class SHMUP extends Game {
 	public static Sound theme;
 	public static Sound explosion;
 	public static Sound charged;
+
+	public float gameWidth = 640, gameHeight;
 	
 	public Skin skn;
 	public Scoreboard score;
 	public Settings settings;
 	public PlayerController playerControls;
-	public float gameWidth = 640, gameHeight;
-	public float screenRatio;
 	private HashMap<String, Screen> screenMap;
 	
 	public static final float x45 = 3.5f, y45 = -0.75f, z45 = 9f;
@@ -76,7 +77,8 @@ public class SHMUP extends Game {
 			atlas = new TextureAtlas(Gdx.files.internal("shmup.atlas"));
 			skn = new Skin(Gdx.files.internal("shmup.json"), atlas);
 		}
-
+		EnemyControllerFactory.s = skn;
+		
 		if(USE_EXTERNAL_RESOURCES && Gdx.app.getType() == ApplicationType.Desktop){
 			theme = Gdx.audio.newSound(Gdx.files.local("../audio/theme.wav"));
 			explosion = Gdx.audio.newSound(Gdx.files.local("../audio/sfx.wav"));

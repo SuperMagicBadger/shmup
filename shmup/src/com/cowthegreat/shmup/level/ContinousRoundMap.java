@@ -14,8 +14,8 @@ import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.Scoreboard;
 import com.cowthegreat.shmup.controllers.DashBroController;
 import com.cowthegreat.shmup.controllers.EnemyController;
+import com.cowthegreat.shmup.controllers.EnemyControllerFactory;
 import com.cowthegreat.shmup.controllers.IdiotBroController;
-import com.cowthegreat.shmup.controllers.ObstacleController;
 import com.cowthegreat.shmup.controllers.PlayerController;
 import com.cowthegreat.shmup.controllers.ShieldBroController;
 import com.cowthegreat.shmup.controllers.SplodeBroController;
@@ -35,10 +35,9 @@ public class ContinousRoundMap implements GameMap {
 	public float DASH_BRO_LEVEL = 1;
 	public float SHIELD_BRO_LEVEL = 2;
 	public float SPLODE_BRO_LEVEL = 3;
-	
+
 	private QuadTree qt;
 	private ArrayList<EnemyController> activeUnits;
-	private ArrayList<ObstacleController> obstacles;
 
 	private SHMUP game;
 	private GameSprite player;
@@ -52,7 +51,7 @@ public class ContinousRoundMap implements GameMap {
 	private Spawner specialSpawner;
 
 	Rectangle bounds;
-	
+
 	// ====================================================
 	// CONSTRUCTOR ----------------------------------------
 	// ====================================================
@@ -61,7 +60,6 @@ public class ContinousRoundMap implements GameMap {
 
 		qt = new QuadTree(SPAWN_RADIUS * 2, SPAWN_RADIUS * 2);
 		activeUnits = new ArrayList<EnemyController>();
-		obstacles = new ArrayList<ObstacleController>();
 
 		level = 0;
 		levelTimer = 0;
@@ -80,7 +78,6 @@ public class ContinousRoundMap implements GameMap {
 			@Override
 			public void spawn(float x, float y) {
 				if (activeUnits.size() < getMaxEnemies()) {
-					System.out.println("spawning");
 					spawnIdiotBro(x, y);
 				}
 			}
@@ -102,9 +99,9 @@ public class ContinousRoundMap implements GameMap {
 
 			@Override
 			public void spawn(float x, float y) {
-				if(choice < 25 && level >= SPLODE_BRO_LEVEL){
+				if (choice < 25 && level >= SPLODE_BRO_LEVEL) {
 					spawnSplodeBro(x, y);
-				} else if (choice < 50 && level >= SHIELD_BRO_LEVEL){
+				} else if (choice < 50 && level >= SHIELD_BRO_LEVEL) {
 					spawnShieldBro(x, y);
 				} else {
 					spawnDashBro(x, y);
@@ -113,11 +110,10 @@ public class ContinousRoundMap implements GameMap {
 
 			@Override
 			public int count() {
-				if(getEnemyCount() >= getMaxEnemies()){
+				if (getEnemyCount() >= getMaxEnemies()) {
 					return 0;
 				}
 				choice = SHMUP.rng.nextInt(100 - getEnemyCount() * 2);
-				System.out.println("spawning a " + choice + " at enemy count " + getEnemyCount() + " and level " + getLevel());
 				if (choice < 15) {
 					return 1;
 				}
@@ -139,10 +135,9 @@ public class ContinousRoundMap implements GameMap {
 	// ====================================================
 	// ENEMY SPAWNING -------------------------------------
 	// ====================================================
-	
+
 	private void spawnDashBro(float x, float y) {
-		System.out.println("spawning dash bro");
-		DashBroController ctrl = new DashBroController();
+		DashBroController ctrl = EnemyControllerFactory.acquireDash();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
@@ -151,9 +146,7 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnShieldBro(float x, float y) {
-		System.out.println("spawning shield bro");
-		ShieldBroController ctrl = new ShieldBroController();
-		ctrl.initialize(game.skn);
+		ShieldBroController ctrl = EnemyControllerFactory.acquireShield();
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
 
@@ -161,8 +154,7 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnSplodeBro(float x, float y) {
-		System.out.println("spawning splode bro");
-		SplodeBroController ctrl = new SplodeBroController();
+		SplodeBroController ctrl = EnemyControllerFactory.acquireSplode();
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
@@ -171,16 +163,15 @@ public class ContinousRoundMap implements GameMap {
 	}
 
 	private void spawnIdiotBro(float x, float y) {
-		System.out.println("spawning bro");
-		IdiotBroController ctrl = new IdiotBroController();
-		ctrl.initialize(game.skn);
+		IdiotBroController ctrl = EnemyControllerFactory.acquireIdiot();
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
 		activeUnits.add(ctrl);
 	}
-	
+
 	private void despawn(int index) {
-		activeUnits.remove(index);
+		EnemyController ec = activeUnits.remove(index);
+		EnemyControllerFactory.free(ec);
 	}
 
 	// ====================================================
@@ -204,11 +195,6 @@ public class ContinousRoundMap implements GameMap {
 		// update spawners
 		idiotSpawner.update(delta);
 		specialSpawner.update(delta);
-
-		// update obstacles
-		for (ObstacleController oc : obstacles) {
-			oc.update(delta);
-		}
 
 		// update enemies and build quad-tree
 		for (int i = activeUnits.size() - 1; i >= 0; i--) {
@@ -251,17 +237,20 @@ public class ContinousRoundMap implements GameMap {
 				SHMUP.vector_pool.free(push);
 			}
 
-			if (ec instanceof ShieldBroController) {
-				c.setRadius(ShieldBroController.SHIELD_RADIUS);
-				for (UnitController uc : qt.controllersInRange(c)) {
-					((ShieldBroController) ec).applyShield(uc);
-				}
-			} else if (ec instanceof SplodeBroController) {
-				if (((SplodeBroController) ec).isExploding()) {
-					c.setRadius(SplodeBroController.EXPLODE_RADIUS);
+			if (ec.isInteractable()) {
+				if (ec instanceof ShieldBroController) {
+
+					c.setRadius(ShieldBroController.SHIELD_RADIUS);
 					for (UnitController uc : qt.controllersInRange(c)) {
-						((SplodeBroController) ec).applyExplosion(uc,
-								game.score);
+						((ShieldBroController) ec).applyShield(uc);
+					}
+				} else if (ec instanceof SplodeBroController) {
+					if (((SplodeBroController) ec).isExploding()) {
+						c.setRadius(SplodeBroController.EXPLODE_RADIUS);
+						for (UnitController uc : qt.controllersInRange(c)) {
+							((SplodeBroController) ec).applyExplosion(uc,
+									game.score);
+						}
 					}
 				}
 			}
@@ -274,7 +263,8 @@ public class ContinousRoundMap implements GameMap {
 	public boolean testCollisions(PlayerController player) {
 		// TODO ffs, make use of qt instead of brute forcing it
 		for (int i = 0; i < activeUnits.size(); i++) {
-			if (!activeUnits.get(i).isDead() && activeUnits.get(i).isInteractable()) {
+			if (!activeUnits.get(i).isDead()
+					&& activeUnits.get(i).isInteractable()) {
 				if (player.collidesWith(activeUnits.get(i))) {
 					if (!player.isDashing) {
 						player.damage(1);
@@ -309,11 +299,6 @@ public class ContinousRoundMap implements GameMap {
 					leashLine.y - ps.getOriginY());
 		}
 		SHMUP.vector_pool.free(leashLine);
-
-		// obstacles
-		for (ObstacleController oc : obstacles) {
-			oc.collide(uc);
-		}
 	}
 
 	// ====================================================
@@ -330,49 +315,56 @@ public class ContinousRoundMap implements GameMap {
 		return 1;
 	}
 
-	public float normalSpawnRate(){
+	public float normalSpawnRate() {
 		if (level == 0)
 			return 4;
 		else
-			return  (float) (5f - Math.sqrt(level));
+			return (float) (5f - Math.sqrt(level));
 	}
-	
-	public int normalCount(){
+
+	public int normalCount() {
 		return Math.min(3, getMaxEnemies() - activeUnits.size());
 	}
-	
-	public float specialSpawnRate(){
+
+	public float specialSpawnRate() {
 		return 10;
 	}
-	
+
 	/*
-	 * enemies should max out around level 5, after
-	 * all the specials are introduced. 
+	 * enemies should max out around level 5, after all the specials are
+	 * introduced.
 	 */
 	public int getMaxEnemies() {
-		return Math.min(MAX_ENEMIES, (level - 1) * (MAX_ENEMIES - INITIAL_ENEMIES) / (MAXED_LEVEL - 1) + INITIAL_ENEMIES);
+		return Math.min(MAX_ENEMIES, (level - 1)
+				* (MAX_ENEMIES - INITIAL_ENEMIES) / (MAXED_LEVEL - 1)
+				+ INITIAL_ENEMIES);
 	}
 
 	private int getEnemyCount() {
 		return activeUnits.size();
 	}
-	
-	public int nextLevelScore(){
-		if(level < 5){
+
+	public int nextLevelScore() {
+		if (level < 5) {
 			return 10;
 		}
 		return 10 + level;
 	}
-	
+
 	@Override
 	public void reset(GameSprite playerSprite) {
 		player = playerSprite;
+		for (int i = activeUnits.size() - 1; i >= 0; i--) {
+			despawn(i);
+		}
 		activeUnits.clear();
+
 		level = 0;
 		nextLevelCounter = 0;
 		idiotSpawner.reset();
 		specialSpawner.reset();
-		specialSpawner.spawnTimer = 5;
+		specialSpawner.spawnTimer = 5; // advance the timer a 'lil to get
+										// specials out early
 	}
 
 	@Override
@@ -399,17 +391,11 @@ public class ContinousRoundMap implements GameMap {
 		for (EnemyController ec : activeUnits) {
 			ec.drawHitbox(renderer);
 		}
-		for (ObstacleController oc : obstacles) {
-			oc.drawHitbox(renderer);
-		}
 		renderer.circle(0, 0, SPAWN_RADIUS);
 	}
 
 	@Override
 	public void draw(SpriteBatch batch) {
-		for (ObstacleController oc : obstacles) {
-			oc.draw(batch);
-		}
 		for (EnemyController ec : activeUnits) {
 			ec.draw(batch);
 		}
@@ -421,17 +407,19 @@ public class ContinousRoundMap implements GameMap {
 		texCircle.draw(renderer);
 		renderer.end();
 		for (EnemyController uc : activeUnits) {
-			if (uc instanceof ShieldBroController) {
-				renderer.begin(transform, GL20.GL_TRIANGLE_STRIP);
-				((ShieldBroController) uc).tcircle.generate();
-				((ShieldBroController) uc).tcircle.draw(renderer);
-				renderer.end();
-			} else if (uc instanceof SplodeBroController) {
-				if (((SplodeBroController) uc).isCharging()) {
+			if (uc.isInteractable()) {
+				if (uc instanceof ShieldBroController) {
 					renderer.begin(transform, GL20.GL_TRIANGLE_STRIP);
-					((SplodeBroController) uc).circle.generate();
-					((SplodeBroController) uc).circle.draw(renderer);
+					((ShieldBroController) uc).tcircle.generate();
+					((ShieldBroController) uc).tcircle.draw(renderer);
 					renderer.end();
+				} else if (uc instanceof SplodeBroController) {
+					if (((SplodeBroController) uc).isCharging()) {
+						renderer.begin(transform, GL20.GL_TRIANGLE_STRIP);
+						((SplodeBroController) uc).circle.generate();
+						((SplodeBroController) uc).circle.draw(renderer);
+						renderer.end();
+					}
 				}
 			}
 		}

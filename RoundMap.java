@@ -182,7 +182,7 @@ public class RoundMap implements GameMap {
 	}
 
 	private DashBroController spawnDashBro(float x, float y) {
-		DashBroController ctrl = new DashBroController();
+		DashBroController ctrl = new DashBroController(game.skn);
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
@@ -192,7 +192,7 @@ public class RoundMap implements GameMap {
 	}
 
 	private ShieldBroController spawnShieldBro(float x, float y) {
-		ShieldBroController ctrl = new ShieldBroController();
+		ShieldBroController ctrl = new ShieldBroController(game.skn);
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
@@ -202,7 +202,7 @@ public class RoundMap implements GameMap {
 	}
 
 	private SplodeBroController spawnSplodeBro(float x, float y) {
-		SplodeBroController ctrl = new SplodeBroController();
+		SplodeBroController ctrl = new SplodeBroController(game.skn);
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
@@ -212,7 +212,7 @@ public class RoundMap implements GameMap {
 	}
 
 	private IdiotBroController spawnIdiotBro(float x, float y) {
-		IdiotBroController ctrl = new IdiotBroController();
+		IdiotBroController ctrl = new IdiotBroController(game.skn);
 		ctrl.initialize(game.skn);
 		ctrl.setTracked(player);
 		ctrl.getControlled().setPosition(x, y);
