@@ -96,7 +96,6 @@ public class ContinousRoundMap implements GameMap {
 
 		specialSpawner = new Spawner() {
 			int choice;
-
 			@Override
 			public void spawn(float x, float y) {
 				if (choice < 25 && level >= SPLODE_BRO_LEVEL) {
@@ -113,14 +112,15 @@ public class ContinousRoundMap implements GameMap {
 				if (getEnemyCount() >= getMaxEnemies()) {
 					return 0;
 				}
+				
 				choice = SHMUP.rng.nextInt(100 - getEnemyCount() * 2);
-				if (choice < 15) {
+				if (choice < 15 && level >= SPLODE_BRO_LEVEL) {
 					return 1;
 				}
-				if (choice < 50) {
-					return 2;
+				if (choice < 50 && level >= SHIELD_BRO_LEVEL) {
+					return 1;
 				}
-				return SHMUP.rng.nextInt(4) + 2;
+				return SHMUP.rng.nextInt(2) + 2;
 			}
 
 			@Override
@@ -239,7 +239,6 @@ public class ContinousRoundMap implements GameMap {
 
 			if (ec.isInteractable()) {
 				if (ec instanceof ShieldBroController) {
-
 					c.setRadius(ShieldBroController.SHIELD_RADIUS);
 					for (UnitController uc : qt.controllersInRange(c)) {
 						((ShieldBroController) ec).applyShield(uc);
@@ -261,7 +260,6 @@ public class ContinousRoundMap implements GameMap {
 
 	@Override
 	public boolean testCollisions(PlayerController player) {
-		// TODO ffs, make use of qt instead of brute forcing it
 		for (int i = 0; i < activeUnits.size(); i++) {
 			if (!activeUnits.get(i).isDead()
 					&& activeUnits.get(i).isInteractable()) {
@@ -278,7 +276,9 @@ public class ContinousRoundMap implements GameMap {
 							nextLevelCounter--;
 						}
 					}
-				} else if (activeUnits.get(i) instanceof SplodeBroController) {
+				}
+				else if (activeUnits.get(i) instanceof SplodeBroController) {
+					System.out.println("applying splode bro to player " + ((SplodeBroController) activeUnits.get(i)).currentState);
 					((SplodeBroController) activeUnits.get(i)).applyExplosion(
 							player, game.score);
 				}
@@ -310,30 +310,57 @@ public class ContinousRoundMap implements GameMap {
 		return level;
 	}
 
+	public int nextLevelScore() {
+		if (level < 5) {
+			return 10;
+		}
+		return 10 + level;
+	}
+
 	@Override
 	public float getLevelSpeed() {
 		return 1;
 	}
 
+	@Override
+	public Rectangle getBounds() {
+		return bounds;
+	}
+	
+	/* =========================
+	 * NORMALS------------------
+	 * =========================
+	 */
+	
 	public float normalSpawnRate() {
-		if (level == 0)
-			return 4;
-		else
-			return (float) (5f - Math.sqrt(level));
+		return (float) Math.max(4f - (level / 2), 1);
 	}
 
 	public int normalCount() {
-		return Math.min(3, getMaxEnemies() - activeUnits.size());
-	}
-
-	public float specialSpawnRate() {
-		return 10;
+//		return Math.min(3, getMaxEnemies() - activeUnits.size());
+		return 3;
 	}
 
 	/*
-	 * enemies should max out around level 5, after all the specials are
-	 * introduced.
+	 * =========================
+	 * SPECIALS-----------------
+	 * =========================
 	 */
+	public float specialSpawnRate() {
+		return 10;
+	}
+	
+	/*
+	 * =========================
+	 * COUNTS-------------------
+	 * =========================
+	 */
+
+	@Override
+	public ArrayList<EnemyController> getActiveUnits() {
+		return activeUnits;
+	}
+	
 	public int getMaxEnemies() {
 		return Math.min(MAX_ENEMIES, (level - 1)
 				* (MAX_ENEMIES - INITIAL_ENEMIES) / (MAXED_LEVEL - 1)
@@ -344,13 +371,11 @@ public class ContinousRoundMap implements GameMap {
 		return activeUnits.size();
 	}
 
-	public int nextLevelScore() {
-		if (level < 5) {
-			return 10;
-		}
-		return 10 + level;
-	}
-
+	
+	// ====================================================
+	// CONTROLS -------------------------------------------
+	// ====================================================
+	
 	@Override
 	public void reset(GameSprite playerSprite) {
 		player = playerSprite;
@@ -371,16 +396,6 @@ public class ContinousRoundMap implements GameMap {
 	public void recordScore(Scoreboard board) {
 		board.currentWave = level;
 		board.currentTime = levelTimer;
-	}
-
-	@Override
-	public Rectangle getBounds() {
-		return bounds;
-	}
-
-	@Override
-	public ArrayList<EnemyController> getActiveUnits() {
-		return activeUnits;
 	}
 
 	// =====================================================

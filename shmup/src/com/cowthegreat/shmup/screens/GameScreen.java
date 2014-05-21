@@ -15,7 +15,6 @@ import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
-import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -23,7 +22,6 @@ import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.controllers.PlayerController;
 import com.cowthegreat.shmup.graphics.GameOverActor;
 import com.cowthegreat.shmup.graphics.GameOverActor.Listener;
-import com.cowthegreat.shmup.graphics.AuraMesh;
 import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.ParallaxBackground;
 import com.cowthegreat.shmup.graphics.ParallaxCamera;
@@ -150,13 +148,11 @@ public class GameScreen implements Screen {
 		System.out.println(prgm.isCompiled() ? "shader working" : prgm.getLog());
 		unitBatch.setShader(prgm);
 		
-		mesh = new AuraMesh(shmupGame);
 	}
 
 	// ==============================================================
 	// RENDERING ----------------------------------------------------
 	// ==============================================================
-	AuraMesh mesh;
 	@Override
 	public void render(float delta) {
 		// SCREEN UPDATE
@@ -178,8 +174,6 @@ public class GameScreen implements Screen {
 		camera.bg.draw(batch);
 		radar.draw(batch, camera, gm.getActiveUnits());
 		batch.end();
-
-		mesh.draw(camera.combined, new Circle(0f, 0f, 250f), Color.RED);
 		
 		// IMMEDIATES
 		Gdx.gl.glEnable(GL20.GL_BLEND);

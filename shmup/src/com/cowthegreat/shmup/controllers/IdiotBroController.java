@@ -46,8 +46,8 @@ public class IdiotBroController extends EnemyController {
 		shield = new GameSprite(s.getRegion("bro_shield"));
 		body.addChild(shield);
 
-		float[] points = new float[] { 0, body.getHeight(), body.getWidth(),
-				body.getHeight(), body.getWidth(), 0, 0, 0 };
+		float[] points = new float[] { 5, body.getHeight() - 5, body.getWidth() - 5,
+				body.getHeight() - 5, body.getWidth() - 5, 5, 5, 5 };
 
 		hitbox = new Polygon(points);
 		hitbox.setOrigin(body.getHeight() / 2, body.getWidth() / 2);
@@ -75,6 +75,8 @@ public class IdiotBroController extends EnemyController {
 		setAlpha(0);
 		setInteractable(false);
 		setDispose(false);
+		
+		body.clearParticles();
 		
 		activeBehavior = ab;
 	}

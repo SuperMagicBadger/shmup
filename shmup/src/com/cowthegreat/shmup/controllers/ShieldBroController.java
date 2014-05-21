@@ -1,7 +1,5 @@
 package com.cowthegreat.shmup.controllers;
 
-import java.util.ArrayList;
-
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool.PooledEffect;
@@ -12,13 +10,16 @@ import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
+import com.cowthegreat.shmup.behaviors.AlphaBehavior;
+import com.cowthegreat.shmup.behaviors.Behavior;
+import com.cowthegreat.shmup.behaviors.ChaseBehavior;
+import com.cowthegreat.shmup.behaviors.ExplodeBehavior;
 import com.cowthegreat.shmup.graphics.GameSprite;
+import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
 import com.cowthegreat.shmup.graphics.PolyTools;
 import com.cowthegreat.shmup.graphics.TexturedCircle;
-import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
 
 public class ShieldBroController extends EnemyController {
 
@@ -40,16 +41,11 @@ public class ShieldBroController extends EnemyController {
 	public GameSprite shieldAnimation;
 	TextureRegion marker;
 
-	float alpha;
-
 	Polygon hitbox;
 	public Circle shieldAura;
 	private boolean dead;
-	private Vector2 velocity;
 
-	ArrayList<EnemyController> shieldList;
-
-	public static final float SHIELD_RADIUS = 200;
+	public static final float SHIELD_RADIUS = 300;
 	public static final float MOVE_SPEED = 150;
 	public static final float DODGE_SPEED = MOVE_SPEED * 4.5f;
 	public static final float STANDOFF_DISTANCE = 150;
@@ -57,10 +53,13 @@ public class ShieldBroController extends EnemyController {
 
 	public TexturedCircle tcircle = new TexturedCircle();
 
+	AlphaBehavior ab;
+	ChaseBehavior cb;
+	ExplodeBehavior eb;
+	Behavior activeBehavior;
+	
 	public ShieldBroController(Skin s) {
-		shieldList = new ArrayList<EnemyController>();
 		dead = false;
-		velocity = new Vector2();
 
 		float[] points = new float[8];
 		points[6] = -22;
@@ -81,6 +80,8 @@ public class ShieldBroController extends EnemyController {
 		shieldAnimation = new GameSprite(
 				new Animation(0.2f, s.getAtlas().findRegions(
 						"shield_bro_shield_anim"), Animation.LOOP_PINGPONG));
+		sprite.addChild(shieldAnimation);
+		
 		marker = s.getRegion("shield_bro_marker");
 
 		tcircle.circle = shieldAura;
@@ -88,12 +89,32 @@ public class ShieldBroController extends EnemyController {
 		tcircle.girth = shieldAura.radius;
 		tcircle.texRegion = s.getRegion("shield_bro_shield_radius");
 		tcircle.alhpa = 0.10f;
+		
+		ab = new AlphaBehavior();
+		ab.setController(this);
+		ab.setDuration(1);
+		
+		cb = new ChaseBehavior();
+		cb.setController(this);
+		cb.setDistance(STANDOFF_DISTANCE - STANDOFF_TOLERANCE, STANDOFF_DISTANCE);
+		cb.setSpeed(MOVE_SPEED);
+		
+		eb = new ExplodeBehavior();
+		eb.setController(this);
+		eb.setSpeed(MOVE_SPEED * 2);
+		
+		activeBehavior = ab;
 	}
 
 	public void initialize(Skin s) {
-		alpha = 0;
+		setAlpha(0);
 		setInteractable(false);
 		setDispose(false);
+		
+		dead = false;
+		
+		ab.reset();
+		activeBehavior = ab;
 	}
 
 	@Override
@@ -103,40 +124,14 @@ public class ShieldBroController extends EnemyController {
 
 	@Override
 	public void update(float delta) {
-		if (alpha < 1) {
-			alpha += delta;
-			if (alpha > 1) {
-				alpha = 1;
-			}
-		} else {
+		activeBehavior.updtae(delta);
+		
+		if(activeBehavior.complete()){
 			setInteractable(true);
-			if (tracked != null) {
-				// find destination, tempe'd in the velocity vector
-				velocity.set(sprite.getX(), sprite.getY());
-				velocity.sub(tracked.getX(), tracked.getY());
-				velocity.nor().scl(STANDOFF_DISTANCE);
-				velocity.add(tracked.getX(), tracked.getY());
-				float dist = velocity.dst(sprite.getX(), sprite.getY());
-
-				if (dist > STANDOFF_TOLERANCE) {
-					// find velocity
-					velocity.sub(sprite.getX(), sprite.getY());
-					velocity.nor().scl(MOVE_SPEED);
-					velocity.limit(MOVE_SPEED);
-				} else {
-					velocity.set(sprite.velocity);
-					velocity.nor().scl(4 * MOVE_SPEED);
-					velocity.set(Vector2.Zero);
-				}
-			} else {
-				velocity.set(Vector2.Zero);
-			}
-			sprite.velocity.set(velocity);
-			sprite.update(delta);
-			shieldAnimation.update(delta);
-
+			cb.setTarget(getTracked());
+			activeBehavior = cb;
 		}
-		shieldAnimation.setPosition(sprite.getX(), sprite.getY());
+		sprite.update(delta);
 		hitbox.setPosition(sprite.getX() + sprite.getOriginX(), sprite.getY()
 				+ sprite.getOriginY());
 		shieldAura.setPosition(sprite.getX() + sprite.getOriginX(),
@@ -158,9 +153,6 @@ public class ShieldBroController extends EnemyController {
 
 	@Override
 	public void onDeath() {
-		for (EnemyController ec : shieldList) {
-			ec.setInvulnerable(false);
-		}
 		SHMUP.explosion.play();
 		sprite.clearParticles();
 		PooledEffect explode = SHMUP.explosion_particles.obtain();
@@ -206,8 +198,7 @@ public class ShieldBroController extends EnemyController {
 
 	@Override
 	public void draw(SpriteBatch batch) {
-		sprite.draw(batch, alpha);
-		shieldAnimation.draw(batch, alpha);
+		sprite.draw(batch, getAlpha());
 	}
 
 	@Override

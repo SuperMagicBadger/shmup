@@ -10,7 +10,7 @@ public class EnemyControllerFactory {
 	// -- IBC -------------------------------------------
 	// ==================================================
 	
-	private static final Pool<IdiotBroController> ibcPool = new Pool<IdiotBroController>(4, 15){
+	private static final Pool<IdiotBroController> ibcPool = new Pool<IdiotBroController>(2){
 		protected IdiotBroController newObject() {
 			System.out.println("new ibc");
 			return new IdiotBroController(s);
@@ -31,7 +31,7 @@ public class EnemyControllerFactory {
 	// -- DBC ------------------------------------------
 	// =================================================
 	
-	private static final Pool<DashBroController> dbcPool = new Pool<DashBroController>(2, 5){
+	private static final Pool<DashBroController> dbcPool = new Pool<DashBroController>(2){
 		protected DashBroController newObject() {
 			System.out.println("new dbc");
 			return new DashBroController(s);
@@ -53,7 +53,7 @@ public class EnemyControllerFactory {
 	// -- SBC ------------------------------------------
 	// =================================================
 	
-	private static final Pool<ShieldBroController> sbcPool = new Pool<ShieldBroController>(2, 5){
+	private static final Pool<ShieldBroController> sbcPool = new Pool<ShieldBroController>(2){
 		protected ShieldBroController newObject() {
 			System.out.println("new sbc");
 			return new ShieldBroController(s);
@@ -75,7 +75,7 @@ public class EnemyControllerFactory {
 	// -- EBC ------------------------------------------
 	// =================================================
 	
-	private static final Pool<SplodeBroController> ebcPool = new Pool<SplodeBroController>(1, 3){
+	private static final Pool<SplodeBroController> ebcPool = new Pool<SplodeBroController>(2){
 		protected SplodeBroController newObject() {
 			System.out.println("new ebc");
 			return new SplodeBroController(s);

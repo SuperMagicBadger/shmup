@@ -13,14 +13,20 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.cowthegreat.shmup.SHMUP;
 import com.cowthegreat.shmup.Scoreboard;
+import com.cowthegreat.shmup.behaviors.AlphaBehavior;
+import com.cowthegreat.shmup.behaviors.Behavior;
+import com.cowthegreat.shmup.behaviors.ChaseBehavior;
+import com.cowthegreat.shmup.behaviors.ExplodeBehavior;
+import com.cowthegreat.shmup.behaviors.MoveBehavior;
 import com.cowthegreat.shmup.graphics.GameSprite;
 import com.cowthegreat.shmup.graphics.GameSprite.ParticleEffectListener;
+import com.cowthegreat.shmup.graphics.PolyTools;
 import com.cowthegreat.shmup.graphics.TexturedCircle;
 
 public class SplodeBroController extends EnemyController {
 
 	public enum State {
-		WAIT, TRACK, CHARGE, EXPLODE, DEAD
+		WAIT, TRACK, CHARGE, EXPLODE
 	}
 
 	public class ChargeEnder implements ParticleEffectListener {
@@ -49,8 +55,8 @@ public class SplodeBroController extends EnemyController {
 
 		@Override
 		public void effectFinished() {
-			setState(State.DEAD);
 			setDispose(true);
+			setInvulnerable(false);
 			efct.free();
 		}
 	}
@@ -59,14 +65,21 @@ public class SplodeBroController extends EnemyController {
 	public static final float EXPLODE_RADIUS = 225;
 	public static final float EXPLODE_TRIGER_RADIUS = 75;
 
+	public static final float EXPLODE_DURATION = 1;
+	public static final float CHARGE_DURATION = 2;
+
 	GameSprite unit;
-	GameSprite center;
 	TextureRegion marker, splodeMarker;
 	Polygon hitbox;
-	State state;
+	public State currentState;
+
 	boolean dead;
 
-	float alpha;
+	AlphaBehavior ab;
+	ChaseBehavior cb;
+	MoveBehavior mb;
+	ExplodeBehavior eb;
+	Behavior activeBehavior;
 
 	Circle explodeCircle;
 	Vector2 velocity;
@@ -80,8 +93,10 @@ public class SplodeBroController extends EnemyController {
 		explodeCircle = new Circle(0, 0, EXPLODE_RADIUS);
 		setState(State.WAIT);
 		unit = new GameSprite(s.getRegion("sploode_bro"));
-		center = new GameSprite(new Animation(0.1f, s.getAtlas().findRegions(
-				"splode_bro_center"), Animation.LOOP_PINGPONG));
+		GameSprite center = new GameSprite(new Animation(0.1f, s.getAtlas()
+				.findRegions("splode_bro_center"), Animation.LOOP_PINGPONG));
+		unit.addChild(center);
+
 		marker = s.getRegion("splode_bro_marker");
 		splodeMarker = s.getRegion("marker");
 
@@ -92,13 +107,37 @@ public class SplodeBroController extends EnemyController {
 		circle.count = 30;
 		circle.alhpa = 0.10f;
 
-		alpha = 0;
+		ab = new AlphaBehavior();
+		ab.setDuration(1);
+		ab.setController(this);
+
+		cb = new ChaseBehavior();
+		cb.setSpeed(MOVE_SPEED);
+		cb.setDistance(0, EXPLODE_TRIGER_RADIUS);
+		cb.setController(this);
+
+		mb = new MoveBehavior();
+		mb.setController(this);
+		mb.setDirection(1, 0);
+		mb.setSpeed(0);
+
+		eb = new ExplodeBehavior();
+		eb.setController(this);
 	}
 
 	@Override
 	public void initialize(Skin s) {
 		setInteractable(false);
 		setDispose(false);
+
+		dead = false;
+		setState(State.WAIT);
+
+		unit.clearParticles();
+
+		ab.reset();
+		ab.setDuration(1);
+		activeBehavior = ab;
 	}
 
 	@Override
@@ -110,12 +149,7 @@ public class SplodeBroController extends EnemyController {
 	public void drawHitbox(ShapeRenderer shapes) {
 		Color c = shapes.getColor();
 		shapes.setColor(Color.RED);
-		shapes.rect(hitbox.getBoundingRectangle().x,
-				hitbox.getBoundingRectangle().y,
-				hitbox.getBoundingRectangle().width,
-				hitbox.getBoundingRectangle().height);
-		shapes.setColor(Color.GREEN);
-		shapes.polygon(hitbox.getTransformedVertices());
+		PolyTools.drawPolygon(shapes, hitbox);
 		shapes.setColor(Color.RED);
 		shapes.circle(explodeCircle.x, explodeCircle.y, explodeCircle.radius);
 		shapes.circle(unit.getOriginPosX(), unit.getOriginPosY(),
@@ -146,93 +180,88 @@ public class SplodeBroController extends EnemyController {
 		PooledEffect efct = SHMUP.explosion_particles.obtain();
 		SHMUP.explosion.play();
 		unit.addParticles(efct, new ExplodeEnder(efct));
+
+		eb.setDirection(getTracked());
+		eb.setSpeed(MOVE_SPEED * 2);
+
+		activeBehavior = eb;
+
+		setState(State.WAIT);
 	}
 
 	public boolean isExploding() {
-		return state == State.EXPLODE;
+		return currentState == State.EXPLODE;
 	}
 
 	private void setState(State s) {
 		switch (s) {
-		case WAIT:
-			break;
-		case CHARGE:
-			PooledEffect efct = SHMUP.gsplode_charge_particles.obtain();
-			efct.start();
-			unit.addParticles(efct, new ChargeEnder(efct));
-			unit.velocity.set(Vector2.Zero);
+		case TRACK:
+			cb.reset();
+			cb.setTarget(getTracked());
+			cb.setDistance(0, EXPLODE_TRIGER_RADIUS);
+			cb.setSpeed(MOVE_SPEED);
+			activeBehavior = cb;
 			break;
 		case EXPLODE:
+			PooledEffect effect = SHMUP.gsplode_particles.obtain();
+			unit.addParticles(effect, new ExplodeEnder(effect));
+			setInvulnerable(true);
+			mb.reset();
+			mb.setSpeed(0);
+			mb.setDuration(EXPLODE_DURATION);
+			activeBehavior = mb;
 			break;
-		case TRACK:
+		case CHARGE:
+			PooledEffect charge = SHMUP.gsplode_charge_particles.obtain();
+			unit.addParticles(charge, new ChargeEnder(charge));
+			mb.reset();
+			mb.setSpeed(0);
+			mb.setDuration(CHARGE_DURATION);
+			activeBehavior = mb;
 			break;
-		case DEAD:
+		case WAIT:
 			break;
 		default:
 			break;
 		}
-		state = s;
+		currentState = s;
 	}
 
 	public void update(float delta) {
-		if (alpha < 1) {
-			alpha += delta;
-			if (alpha > 1) {
-				alpha = 1;
-			}
-		} else {
-			setInteractable(true);
-			switch (state) {
+		activeBehavior.updtae(delta);
 
+		if (activeBehavior.complete()) {
+			switch (currentState) {
 			case CHARGE:
-				unit.velocity.set(Vector2.Zero);
+				setState(State.EXPLODE);
 				break;
 			case EXPLODE:
 				setState(State.WAIT);
-				setInvulnerable(true);
 				break;
 			case TRACK:
-				updateTrack(delta);
+				setState(State.CHARGE);
 				break;
 			case WAIT:
+				setInteractable(true);
 				if (getTracked() != null) {
 					setState(State.TRACK);
 				}
 				break;
-			case DEAD:
-				break;
 			default:
+				setState(State.WAIT);
 				break;
+
 			}
-			unit.update(delta);
-			center.update(delta);
-			center.setPosition(unit.getX(), unit.getY());
-			hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
-			explodeCircle.setPosition(unit.getOriginPosX(),
-					unit.getOriginPosY());
 		}
-	}
 
-	public void updateTrack(float delta) {
-		if (!isDead()) {
-			velocity.set(getTracked().getOriginPosX(), getTracked()
-					.getOriginPosY());
-			velocity.sub(unit.getOriginPosX(), unit.getOriginPosY());
-
-			if (velocity.len2() < EXPLODE_TRIGER_RADIUS * EXPLODE_TRIGER_RADIUS) {
-				setState(State.CHARGE);
-			}
-
-			velocity.nor().scl(MOVE_SPEED);
-
-			unit.velocity.set(velocity);
-		}
+		unit.update(delta);
+		hitbox.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
+		explodeCircle.setPosition(unit.getOriginPosX(), unit.getOriginPosY());
 	}
 
 	@Override
 	public void draw(SpriteBatch batch) {
-		center.draw(batch, alpha);
-		unit.draw(batch, alpha);
+		unit.draw(batch, getAlpha());
 	}
 
 	@Override
@@ -242,18 +271,20 @@ public class SplodeBroController extends EnemyController {
 
 	public boolean applyExplosion(UnitController unit, Scoreboard board) {
 		if (isExploding()) {
-			Polygon hb = unit.getHitBox();
-
-			if (Intersector.overlaps(explodeCircle, hb.getBoundingRectangle())) {
-				float[] xy = hb.getTransformedVertices();
-				for (int i = 0; i < xy.length - 1; i += 2) {
-					if (explodeCircle.contains(xy[i], xy[i + 1])) {
-						unit.damage(10);
-						if (unit.isDead()
-								&& !(unit instanceof PlayerController)) {
-							board.currentKills++;
+			if (!unit.isDead()) {
+				Polygon hb = unit.getHitBox();
+				if (Intersector.overlaps(explodeCircle,
+						hb.getBoundingRectangle())) {
+					float[] xy = hb.getTransformedVertices();
+					for (int i = 0; i < xy.length - 1; i += 2) {
+						if (explodeCircle.contains(xy[i], xy[i + 1])) {
+							unit.damage(10);
+							if (unit.isDead()
+									&& !(unit instanceof PlayerController)) {
+								board.currentKills++;
+							}
+							return true;
 						}
-						return true;
 					}
 				}
 			}
@@ -267,14 +298,14 @@ public class SplodeBroController extends EnemyController {
 
 	@Override
 	public TextureRegion radarMarker() {
-		if (state == State.CHARGE || state == State.EXPLODE) {
+		if (currentState == State.CHARGE || currentState == State.EXPLODE) {
 			return splodeMarker;
 		}
 		return marker;
 	}
 
 	public boolean isCharging() {
-		return state == State.CHARGE;
+		return currentState == State.CHARGE;
 	}
 
 	@Override

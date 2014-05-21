@@ -31,9 +31,9 @@ public abstract class PlayerController implements UnitController {
 	public static final float rotationalSpeed = 512;
 
 	public static final float dashSpeed = 2000;
-	public static final float dashDuration = 0.10f;
-	public static final float dashCooldown = 0.5f;
-	public static final float dashDistance = dashSpeed * dashDuration;
+	public static final float dashDistance = 200;
+	public static final float dashDuration = dashDistance / dashSpeed;
+	public static final float dashCooldown = 0.25f;
 
 	public static final float HITBOX_REST_SCALE_X = 0.5f;
 	public static final float HITBOX_REST_SCALE_Y = 0.5f;
