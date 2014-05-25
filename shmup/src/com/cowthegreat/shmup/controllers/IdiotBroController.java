@@ -23,7 +23,7 @@ public class IdiotBroController extends EnemyController {
 		}
 	}
 
-	public static final float IDIOT_BRO_SPEED = 75;
+	public static final float IDIOT_BRO_SPEED = 50;
 	public static final float ROTATION_RATE = 360;
 	private static TextureRegion marker;
 
@@ -56,7 +56,7 @@ public class IdiotBroController extends EnemyController {
 		marker = s.getRegion("bro_marker");
 		
 		ab = new AlphaBehavior();
-		ab.setDuration(1);
+		ab.setDuration(2);
 		ab.setController(this);
 		
 		cb = new ChaseBehavior();
@@ -78,6 +78,7 @@ public class IdiotBroController extends EnemyController {
 		
 		body.clearParticles();
 		
+		ab.reset();
 		activeBehavior = ab;
 	}
 

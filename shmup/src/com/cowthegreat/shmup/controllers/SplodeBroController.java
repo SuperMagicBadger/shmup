@@ -108,7 +108,7 @@ public class SplodeBroController extends EnemyController {
 		circle.alhpa = 0.10f;
 
 		ab = new AlphaBehavior();
-		ab.setDuration(1);
+		ab.setDuration(2);
 		ab.setController(this);
 
 		cb = new ChaseBehavior();
@@ -136,7 +136,6 @@ public class SplodeBroController extends EnemyController {
 		unit.clearParticles();
 
 		ab.reset();
-		ab.setDuration(1);
 		activeBehavior = ab;
 	}
 

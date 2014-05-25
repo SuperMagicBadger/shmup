@@ -102,7 +102,7 @@ public class DashBroController extends EnemyController {
 
 		ab = new AlphaBehavior();
 		ab.setController(this);
-		ab.setDuration(1);
+		ab.setDuration(2);
 
 		cb = new ChaseBehavior();
 		cb.setController(this);
@@ -128,7 +128,6 @@ public class DashBroController extends EnemyController {
 		dead = false;
 
 		ab.reset();
-		ab.setDuration(1);
 		activeBehavior = ab;
 
 		unit.clearParticles();

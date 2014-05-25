@@ -92,7 +92,7 @@ public class ShieldBroController extends EnemyController {
 		
 		ab = new AlphaBehavior();
 		ab.setController(this);
-		ab.setDuration(1);
+		ab.setDuration(2);
 		
 		cb = new ChaseBehavior();
 		cb.setController(this);

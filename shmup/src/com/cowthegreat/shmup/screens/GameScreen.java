@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer20;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
@@ -36,7 +35,7 @@ public class GameScreen implements Screen {
 
 	private ParallaxCamera camera;
 	private SpriteBatch batch;
-	private SpriteBatch unitBatch;
+//	private SpriteBatch unitBatch;
 	private ShapeRenderer shapes;
 	private ImmediateModeRenderer immediate;
 	private DecimalFormat format;
@@ -52,7 +51,7 @@ public class GameScreen implements Screen {
 	boolean isPaused = false;
 	boolean isGameOver = true;
 
-	private ShaderProgram prgm;
+//	private ShaderProgram prgm;
 	
 	private Stage stage;
 	private Label fpsLabel, scoreLabel, acceleromiterLabel;
@@ -63,8 +62,8 @@ public class GameScreen implements Screen {
 		game = shmupGame;
 		playerContrller = game.playerControls;
 		playerContrller.setGame(shmupGame);
-		batch = new SpriteBatch();
-		unitBatch = new SpriteBatch();
+		batch = new SpriteBatch(300);
+//		unitBatch = new SpriteBatch(35);
 		shapes = new ShapeRenderer();
 		immediate = new ImmediateModeRenderer20(false, true, 1);
 		camera = new ParallaxCamera(game.gameWidth, game.gameHeight);
@@ -143,16 +142,17 @@ public class GameScreen implements Screen {
 
 		radar = new Radar(game);
 		
-		ShaderProgram.pedantic = false;
-		prgm = new ShaderProgram(Gdx.files.internal("shaders/passthrough.vsh"), Gdx.files.internal("shaders/passthrough.fsh"));
-		System.out.println(prgm.isCompiled() ? "shader working" : prgm.getLog());
-		unitBatch.setShader(prgm);
+//		ShaderProgram.pedantic = false;
+//		prgm = new ShaderProgram(Gdx.files.internal("shaders/passthrough.vsh"), Gdx.files.internal("shaders/passthrough.fsh"));
+//		System.out.println(prgm.isCompiled() ? "shader working" : prgm.getLog());
+//		unitBatch.setShader(prgm);
 		
 	}
 
 	// ==============================================================
 	// RENDERING ----------------------------------------------------
 	// ==============================================================
+	
 	@Override
 	public void render(float delta) {
 		// SCREEN UPDATE
@@ -175,17 +175,17 @@ public class GameScreen implements Screen {
 		radar.draw(batch, camera, gm.getActiveUnits());
 		batch.end();
 		
-		// IMMEDIATES
+		// IMMEDIATES (auras and level boundary)
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		gm.draw(immediate, camera.combined);
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 		
 		// SPRITE RENDERING
-		unitBatch.setProjectionMatrix(camera.combined);
-		unitBatch.begin();
-		gm.draw(unitBatch);
-		playerContrller.draw(unitBatch);
-		unitBatch.end();
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		gm.draw(batch);
+		playerContrller.draw(batch);
+		batch.end();
 
 		// HITBOX RENDERING
 		if (game.settings.drawHitboxes) {
@@ -203,7 +203,7 @@ public class GameScreen implements Screen {
 //		playerContrller.setMesage(acceleromiterLabel, format);
 //		acceleromiterLabel.pack();
 //		acceleromiterLabel.setPosition(50, 50);
-		scoreLabel.setText("Wave " + gm.getLevel() + " Score: "
+		scoreLabel.setText("Score: "
 				+ game.score.currentKills);
 		scoreLabel.pack();
 		scoreLabel.setPosition(stage.getWidth() - scoreLabel.getWidth(),
